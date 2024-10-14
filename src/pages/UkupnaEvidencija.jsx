@@ -8,8 +8,26 @@ const UkupnaEvidencija = () => {
     const [dataSource, setDataSource] = useState([]);
     const [isModalVisible, setIsModalVisible] = useState(false);
     const [currentItem, setCurrentItem] = useState(null);
-    const [razlika, setRazlika] = useState(0);
     const [form] = Form.useForm();
+    const [ukupnoKupljeno, setUkupnoKupljeno] = useState(0);
+    const [ukupnoProdano, setUkupnoProdano] = useState(0);
+
+    useEffect(() => {
+        // Load data from localStorage on component mount
+        const storedData = artiklStorage.getAll();
+        if (storedData) {
+            console.log(storedData);
+            const updatedData = handleEvidencijaStanja(storedData);
+            setDataSource(updatedData);
+        }
+    }, []);
+
+    const handleEvidencijaStanja = (data) => {
+        return data.map(d => ({
+            ...d,
+            evidencijaStanja: parseInt(d.ukupnoKupljeno) - parseInt(d.ukupnoProdano),
+        }));
+    };
 
     // Table columns definition
     const columns = [
@@ -27,7 +45,7 @@ const UkupnaEvidencija = () => {
             render: (_, record) => {
                 return (
                     <span>
-                        <p style={{textAlign: "center"}}>{_}</p>
+                        <p style={{ textAlign: "center" }}>{_}</p>
                     </span>
                 );
             }
@@ -40,7 +58,7 @@ const UkupnaEvidencija = () => {
             render: (_, record) => {
                 return (
                     <span>
-                        <p style={{textAlign: "center"}}>{_}</p>
+                        <p style={{ textAlign: "center" }}>{_}</p>
                     </span>
                 );
             }
@@ -54,9 +72,9 @@ const UkupnaEvidencija = () => {
                 const razlika = record.evidencijaRobe - record.evidencijaStanja;
                 let color;
 
-                if(razlika < 0){
-                    color = 'red'; //Negative difference
-                } else if(razlika > 0){
+                if (razlika < 0) {
+                    color = 'red'; // Negative difference
+                } else if (razlika > 0) {
                     color = '#5ce65c';
                 } else {
                     color = 'black';
@@ -64,7 +82,7 @@ const UkupnaEvidencija = () => {
 
                 return (
                     <span style={{ color }}>
-                        <strong><p style={{textAlign: "center"}}>{razlika}</p></strong>
+                        <strong><p style={{ textAlign: "center" }}>{razlika}</p></strong>
                     </span>
                 );
             }
@@ -75,33 +93,34 @@ const UkupnaEvidencija = () => {
             align: "center",
             render: (_, record) => (
                 <>
-                    <Button 
-                        type="default" 
+                    <Button
+                        type="default"
                         onClick={() => showEditModal(record)}
-                        icon={<EditOutlined/>}
-                        style={{ color: "blue"}}
-                        >
+                        icon={<EditOutlined />}
+                        style={{ color: "blue" }}
+                    >
                     </Button>
                     <Button
                         type="danger"
                         onClick={() => handleDelete(record.key)}
-                        icon={<DeleteOutlined/>}
-                        style={{ marginLeft: 8 , color:"red"}}
+                        icon={<DeleteOutlined />}
+                        style={{ marginLeft: 8, color: "red" }}
                     >
                     </Button>
                 </>
             ),
         },
-    ];
-
-    useEffect(() => {
-        // Load data from localStorage on component mount
-        const storedData = artiklStorage.getAll();
-        if (storedData) {
-            console.log(storedData);
-            setDataSource(storedData);
+        {
+            title: "Ukupno prodano",
+            key: "ukupnoProdano",
+            dataIndex: "ukupnoProdano"
+        },
+        {
+            title: "Ukupno kupljeno",
+            key: "ukupnoKupljeno",
+            dataIndex: "ukupnoKupljeno"
         }
-    }, []);
+    ];
 
     // Clear all articles from local storage and reset data source
     const clearLocalStorage = () => {
@@ -113,31 +132,45 @@ const UkupnaEvidencija = () => {
     const showAddModal = () => {
         setCurrentItem(null);
         form.resetFields();
+        setUkupnoKupljeno(0);
+        setUkupnoProdano(0);
         setIsModalVisible(true);
     };
 
     const showEditModal = (item) => {
         setCurrentItem(item);
         form.setFieldsValue(item); // Populate form with the selected item
+        setUkupnoKupljeno(item.ukupnoKupljeno);
+        setUkupnoProdano(item.ukupnoProdano);
         setIsModalVisible(true);
     };
 
     const handleOk = () => {
         form.validateFields().then((values) => {
-            const newItem = { 
-                key: Date.now().toString(), ...values, 
-                razlika: values.evidencijaRobe - values.evidencijaStanja,
+            const updatedValues = {
+                ...values,
+                evidencijaStanja: ukupnoKupljeno - ukupnoProdano,
+                ukupnoKupljeno,
+                ukupnoProdano,
+                razlika: values.evidencijaRobe - (ukupnoKupljeno - ukupnoProdano),
             };
+
+            const newItem = {
+                key: Date.now().toString(), ...updatedValues
+            };
+
             if (currentItem) {
                 // Update operation
                 const updatedData = dataSource.map((item) =>
-                    item.key === currentItem.key ? { ...item, ...values } : item
+                    item.key === currentItem.key ? { ...item, ...updatedValues } : item
                 );
-                setDataSource(updatedData);
-                artiklStorage.saveArtikl(updatedData); // Save the updated data to local storage
+                const finalData = handleEvidencijaStanja(updatedData);
+                setDataSource(finalData);
+                artiklStorage.saveArtikl(finalData); // Save the updated data to local storage
             } else {
                 // Create operation
-                setDataSource([...dataSource, newItem]);
+                const finalData = handleEvidencijaStanja([...dataSource, newItem]);
+                setDataSource(finalData);
                 artiklStorage.addArtikl(newItem); // Save new item to local storage
             }
             setIsModalVisible(false);
@@ -148,11 +181,12 @@ const UkupnaEvidencija = () => {
 
     const handleDelete = (key) => {
         const updatedData = artiklStorage.deleteArtikl(key);
-        setDataSource(updatedData); // Update state to reflect deletion
+        const finalData = handleEvidencijaStanja(updatedData);
+        setDataSource(finalData); // Update state to reflect deletion
     };
 
     return (
-        <div style={{margin: "10px"}}>
+        <div style={{ margin: "10px" }}>
             <h1 style={{ textAlign: "center" }}>Ukupna evidencija</h1>
             <Button type="primary" onClick={showAddModal} style={{ marginBottom: 16 }}>
                 Add Item
@@ -160,12 +194,14 @@ const UkupnaEvidencija = () => {
             <Button onClick={clearLocalStorage} type="danger" style={{ marginLeft: 8 }}>
                 Clear All
             </Button>
-            <Table 
-                columns={columns} 
-                dataSource={dataSource} 
-                rowKey="key" 
-                style={{width: "50%", textAlign: "center"}}
+            <div style={{ display: "flex", flexDirection: "row", margin: "10px", marginLeft: "10px" }}>
+                <Table
+                    columns={columns}
+                    dataSource={dataSource}
+                    rowKey="key"
+                    style={{ width: "100%", textAlign: "center" }}
                 />
+            </div>
             <Modal
                 title={currentItem ? "Edit Item" : "Add Item"}
                 visible={isModalVisible}
@@ -181,25 +217,34 @@ const UkupnaEvidencija = () => {
                         <Input />
                     </Form.Item>
                     <Form.Item
-                        name="evidencijaStanja"
-                        label="Evidencija stanja"
-                        rules={[{ required: true, message: "Please input the evidencija stanja!" }]}
-                    >
-                        <Input type="number"/>
-                    </Form.Item>
-                    <Form.Item
                         name="evidencijaRobe"
                         label="Evidencija robe"
                         rules={[{ required: true, message: "Please input the evidencija robe!" }]}
                     >
-                        <Input type="number"/>
+                        <Input type="number" />
                     </Form.Item>
-                    {/* <Form.Item
-                        name="razlika"
-                        label="Razlika"
+                    <Form.Item
+                        name="ukupnoProdano"
+                        label="Ukupno Prodano"
+                        rules={[{ required: true, message: "Please input the ukupno prodano!" }]}
                     >
-                        <Input readOnly/>
-                    </Form.Item> */}
+                        <Input
+                            type="number"
+                            value={ukupnoProdano}
+                            onChange={(e) => setUkupnoProdano(parseInt(e.target.value) || 0)}
+                        />
+                    </Form.Item>
+                    <Form.Item
+                        name="ukupnoKupljeno"
+                        label="Ukupno Kupljeno"
+                        rules={[{ required: true, message: "Please input the ukupno kupljeno!" }]}
+                    >
+                        <Input
+                            type="number"
+                            value={ukupnoKupljeno}
+                            onChange={(e) => setUkupnoKupljeno(parseInt(e.target.value) || 0)}
+                        />
+                    </Form.Item>
                 </Form>
             </Modal>
         </div>

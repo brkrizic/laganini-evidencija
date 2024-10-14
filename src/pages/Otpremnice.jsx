@@ -65,7 +65,7 @@ const Otpremnice = () => {
             if(foundArtikl){
                 return {
                     ...artikl,
-                    evidencijaStanja: parseInt(artikl.evidencijaStanja) + parseInt(foundArtikl.iznosOtpremnice)
+                    ukupnoKupljeno: parseInt(artikl.ukupnoKupljeno) + parseInt(foundArtikl.iznosOtpremnice),
                 }
             }
             return artikl;
@@ -110,6 +110,8 @@ const Otpremnice = () => {
         console.log("Otpremnica saved: ", otpremnicaObj);
 
         updateArtiklStorage(arrObjArtikl);
+
+        setOtpremnice(otpremnicaStorage.getAll());
 
         setVisibleArtiklModal(false);
         setVisibleModal(false);
