@@ -1,0 +1,6 @@
+.ant-table-thead > tr > th {
+    text-align: center; /* Center the text in header */
+    font-weight: bold; 
+    background-color: #1591ea !important;
+    color: white !important;
+}
