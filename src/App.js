@@ -5,6 +5,7 @@ import Otpremnice from "./pages/Otpremnice";
 import Prodano from "./pages/Prodano";
 import Inventura from "./pages/Inventura";
 import Header from "./header/Header";
+import Artikli from "./pages/Artikli";
 
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
           <Route path="Otpremnice" element={<Otpremnice/>}></Route>
           <Route path="Prodano" element={<Prodano/>}></Route>
           <Route path="Inventura" element={<Inventura/>}></Route>
+          <Route path="Artikli" element={<Artikli/>}></Route>
         </Route>
       </Routes>
     </BrowserRouter>

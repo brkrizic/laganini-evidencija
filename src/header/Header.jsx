@@ -21,6 +21,10 @@ const Header = () => {
     {
         name: "Inventura",
         onClick: () => navigate("/inventura")
+    },
+    {
+        name: "Artikli",
+        onClick: () => navigate("/artikli")
     }
 ]
 

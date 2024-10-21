@@ -11,6 +11,7 @@ const UkupnaEvidencija = () => {
     const [form] = Form.useForm();
     const [ukupnoKupljeno, setUkupnoKupljeno] = useState(0);
     const [ukupnoProdano, setUkupnoProdano] = useState(0);
+    const [evidencijaRobe, setEvidencijaRobe] = useState(0);
 
     useEffect(() => {
         // Load data from localStorage on component mount
@@ -134,6 +135,7 @@ const UkupnaEvidencija = () => {
         form.resetFields();
         setUkupnoKupljeno(0);
         setUkupnoProdano(0);
+        setEvidencijaRobe(0);
         setIsModalVisible(true);
     };
 
@@ -150,6 +152,7 @@ const UkupnaEvidencija = () => {
             const updatedValues = {
                 ...values,
                 evidencijaStanja: ukupnoKupljeno - ukupnoProdano,
+                evidencijaRobe,
                 ukupnoKupljeno,
                 ukupnoProdano,
                 razlika: values.evidencijaRobe - (ukupnoKupljeno - ukupnoProdano),
@@ -219,14 +222,17 @@ const UkupnaEvidencija = () => {
                     <Form.Item
                         name="evidencijaRobe"
                         label="Evidencija robe"
-                        rules={[{ required: true, message: "Please input the evidencija robe!" }]}
+                        // rules={[{ required: true, message: "Please input the evidencija robe!" }]}
                     >
-                        <Input type="number" />
+                        <Input 
+                            type="number" 
+                            value={evidencijaRobe} 
+                            onChange={e => setEvidencijaRobe(e)}/>
                     </Form.Item>
                     <Form.Item
                         name="ukupnoProdano"
                         label="Ukupno Prodano"
-                        rules={[{ required: true, message: "Please input the ukupno prodano!" }]}
+                        // rules={[{ required: true, message: "Please input the ukupno prodano!" }]}
                     >
                         <Input
                             type="number"
@@ -237,7 +243,7 @@ const UkupnaEvidencija = () => {
                     <Form.Item
                         name="ukupnoKupljeno"
                         label="Ukupno Kupljeno"
-                        rules={[{ required: true, message: "Please input the ukupno kupljeno!" }]}
+                        // rules={[{ required: true, message: "Please input the ukupno kupljeno!" }]}
                     >
                         <Input
                             type="number"

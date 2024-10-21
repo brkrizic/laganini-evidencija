@@ -19,21 +19,35 @@ const OtpremnicaDetails = (props) => {
                 open={isModalOpen}
                 onCancel={handleOnClose}
                 onOk={handleOnClose}
-                title="Otpremnica details"
+                title={props.title}
             >
             <Form>
                 <Form.Item>
-                        <h3>{`Naziv otpremnice: ${props.otpremnica?.naziv || ""}`}</h3>
+                        {/* <h3>{`Naziv ${props.title}: ${props.otpremnica?.naziv || ""}`}</h3> */}
+                        <p>{`Datum: ${props.otpremnica?.datum || ""}`}</p>
                         <p>{`Broj artikla: ${props.otpremnica?.brojArtikla || 0}`}</p>
                         <p>Artikli:</p>
-                        <ul style={{ paddingLeft: 20 }}>
-                            {props.otpremnica?.artikl?.map((a, index) => (
-                                <li key={index}>
-                                    <p>{`Naziv artikla: ${a.nazivArtikla}`}</p>
-                                    <p>{`Iznos otpremnice: ${a.iznosOtpremnice}`}</p>
-                                </li>
-                            )) || <p>No articles available.</p>}
-                        </ul>
+                        <table style={{ paddingLeft: 20, borderCollapse: 'collapse', width: '100%' }}>
+                            <thead>
+                                <tr>
+                                    <th style={{ border: '1px solid black', padding: '8px' }}>Naziv artikla</th>
+                                    <th style={{ border: '1px solid black', padding: '8px' }}>{props.title}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {props.otpremnica?.artikl?.map((a, index) => (
+                                    <tr key={index}>
+                                        <td style={{ border: '1px solid black', padding: '8px' }}>{a.nazivArtikla}</td>
+                                        <td style={{ border: '1px solid black', padding: '8px', textAlign: "center" }}>{a.iznosOtpremnice}</td>
+                                    </tr>
+                                )) || (
+                                    <tr>
+                                        <td colSpan="2" style={{ textAlign: 'center', padding: '8px' }}>Artikli nisu dostupni.</td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+
                 </Form.Item>
             </Form>
             </Modal>
