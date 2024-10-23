@@ -1,10 +1,10 @@
-import { Form, Modal, Switch, Input, notification } from "antd";
+import { Form, Input, Modal, notification, Switch } from "antd";
 import React, { useEffect, useState } from "react";
-import { formatDateForDisplay } from "../convert/dateConverter";
-import { OtpremniceService } from "../api/OtpremniceService";
+import { InventuraService } from "../api/InventuraService";
 import { ArtikliService } from "../api/ArtikliService";
+import { formatDateForDisplay } from "../convert/dateConverter";
 
-const OtpremnicaDetails = (props) => {
+const InventuraDetails = (props) => {
     const [isModalOpen, setIsModalOpen] = useState(props.isOpen);
     const [isChecked, setIsChecked] = useState(false);
     const [artikliStorage, setArtikliStorage] = useState(props.storageItem?.artikli || []);
@@ -50,13 +50,13 @@ const OtpremnicaDetails = (props) => {
                 if (foundArtikl) {
                     return {
                         ...artikl,
-                        kupljenaKolicina: parseFloat(foundArtikl.kolicina) // Replace previous quantity with new one
+                        evidencijaRobe: parseFloat(foundArtikl.kolicina) // Replace previous quantity with new one
                     };
                 }
                 return artikl;
             });
 
-            await OtpremniceService.editOtpremnica(props.storageItem.id, updatedStorage);
+            await InventuraService.editOtpremnica(props.storageItem.id, updatedStorage);
             await Promise.all(updatedArtikl.map(async (artikl) => {
                 await ArtikliService.editArtikl(artikl.id, artikl);
             }));
@@ -159,6 +159,5 @@ const OtpremnicaDetails = (props) => {
             </Form>
         </Modal>
     );
-};
-
-export default OtpremnicaDetails;
+}
+export default InventuraDetails;

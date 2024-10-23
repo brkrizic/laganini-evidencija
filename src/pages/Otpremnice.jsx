@@ -210,6 +210,13 @@ const Otpremnice = () => {
         setIdObjOtpremnica(id);
     }
 
+    const handleOnClose = async () => {
+        setModalOpen(false);
+        const res = await OtpremniceService.getAllOtpremnice();
+        const resData = res.data;
+        setOtpremnice(resData);
+    }
+
     return (
         <>
             <div style={{ backgroundColor: "#0063a6", height: "50px", width: "100%" }}>
@@ -310,7 +317,7 @@ const Otpremnice = () => {
                 )}
                 <OtpremnicaDetails
                     isOpen={modalOpen}
-                    onClose={() => setModalOpen(false)}
+                    onClose={() => handleOnClose()}
                     storageItem={selectedOtpremnica}
                     title={"Otpremnica"}
                     id={idObjOtpremnica}

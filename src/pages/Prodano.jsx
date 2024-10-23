@@ -1,214 +1,320 @@
-// import { Button, Input, Modal, Select, DatePicker } from "antd";
-// import React, { useEffect, useState } from "react";
-// import { artiklStorage } from "../storage/artikliStorage";
-// import { v4 as uuidv4 } from 'uuid';
-// import OtpremnicaDetails from "../modal/OtpremnicaDetails";
-// import { prodanoStorage } from "../storage/prodanoStorage";
-// import customParseFormat from 'dayjs/plugin/customParseFormat';
-// import dayjs from 'dayjs';
-// dayjs.extend(customParseFormat);
+import { Button, Input, Modal, Select, DatePicker, notification, Spin } from "antd";
+import React, { useEffect, useState, useCallback } from "react";
+import { v4 as uuidv4 } from 'uuid';
+import ProdanoDetails from "../modal/ProdanoDetails";
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+import dayjs from 'dayjs';
+import { DeleteOutlined, LoadingOutlined } from "@ant-design/icons";
+import DeleteModal from "../modal/DeleteModal";
+import { ArtikliService } from "../api/ArtikliService";
+import { ProdanoService } from "../api/ProdanoService";
+import { formatDateForDisplay, formatDateForServer } from "../convert/dateConverter";
+dayjs.extend(customParseFormat);
 
-// const { Option } = Select;
+const { Option } = Select;
 
-// const Prodano = () => {
-//     const [artikli, setArtikli] = useState([]);
-//     const [nazivOtpremnice, setNazivOtpremnice] = useState("");
-//     const [nazivArtikla, setNazivArtikla] = useState("");
-//     const [postojeciArtikli, setPostojeciArtikli] = useState([]);
-//     const [iznosOtpremnice, setIznosOtpremnice] = useState("");
-//     const [visibleModal, setVisibleModal] = useState(false);
-//     const [brojArtikla, setBrojArtikla] = useState(0);
-//     const [visibleArtiklModal, setVisibleArtiklModal] = useState(false);
-//     const [otpremnice, setOtpremnice] = useState([]);
-//     const [arrObjArtikl, setArrObjArtikl] = useState([]);
-//     const [modalOpen, setModalOpen] = useState(false);
-//     const [selectedOtpremnica, setSelectedOtpremnica] = useState(null);
-//     const [datum, setDatum] = useState(dayjs('01/01/2015', 'DD/MM/YYYY'));
+const Prodano = () => {
+    const [artikli, setArtikli] = useState([]);
+    const [nazivProdano, setNazivProdano] = useState("");
+    const [nazivArtikla, setNazivArtikla] = useState("");
+    const [postojeciArtikli, setPostojeciArtikli] = useState([]);
+    const [iznosProdano, setIznosProdano] = useState("");
+    const [visibleModal, setVisibleModal] = useState(false);
+    const [prodano, setProdano] = useState([]);
+    const [arrObjArtikl, setArrObjArtikl] = useState([]);
+    const [modalOpen, setModalOpen] = useState(false);
+    const [selectedProdano, setSelectedProdano] = useState(null);
+    const [datum, setDatum] = useState(dayjs());
+    const [deleteModal, setDeleteModal] = useState(false);
+    const [keyToDelete, setKeyToDelete] = useState(null);
+    const [loadingFetch, setLoadingFetch] = useState(false);
+    const [loadingSave, setLoadingSave] = useState(false);
+    const [loadingDelete, setLoadingDelete] = useState(false);
+    const [idObjProdano, setIdObjProdano] = useState();
 
-//     useEffect(() => {
-//         const artikliData = artiklStorage.getAll();
-//         setArtikli(artikliData);
+    useEffect(() => {
+        const fetchData = async () => {
+            setLoadingFetch(true);
+            try {
+                const resArtikli = await ArtikliService.getAllArtikli();
+                const artikliData = resArtikli.data;
+                setArtikli(artikliData);
+                setPostojeciArtikli(artikliData.map((artikl) => artikl.naziv));
 
-//         const artikliNaziv = artikliData.map((artikl) => artikl.artikl);
-//         setPostojeciArtikli(artikliNaziv);
+                const resProdano = await ProdanoService.getAllProdano();
+                setProdano(resProdano.data);
+            } catch (error) {
+                console.error("Error fetching data:", error);
+            } finally {
+                setLoadingFetch(false);
+            }
+        };
+        fetchData();
+    }, []);
 
-//         const prodanoData = prodanoStorage.getAll();
-//         setOtpremnice(prodanoData);
-//     }, []);
+    const handleOpenModal = () => {
+        setVisibleModal(!visibleModal);
+        resetForm();
+    };
 
-//     const handleOpenModal = () => {
-//         setVisibleModal(true);
-//         setBrojArtikla(0);
-//         setArrObjArtikl([]);
-//         setNazivOtpremnice("");
-//     };
+    const resetForm = () => {
+        setArrObjArtikl([]);
+        setNazivProdano("");
+        setNazivArtikla("");
+        setIznosProdano("");
+        setDatum(dayjs());
+    };
 
-//     const handleBrojArtikla = (e) => {
-//         setBrojArtikla(parseInt(e.target.value) || 0);
-//     };
+    const handleSaveArtikl = () => {
+        const objArtikl = {
+            nazivArtikla,
+            kolicina: iznosProdano
+        };
 
-//     const handleNazivOtpremnice = (e) => {
-//         setNazivOtpremnice(e.target.value);
-//     };
+        setArrObjArtikl((prev) => [...prev, objArtikl]);
+        setNazivArtikla("");
+        setIznosProdano("");
+    };
 
-//     const handleClear = () => {
-//         prodanoStorage.clearAll();
-//         setOtpremnice([]);
-//         console.log("LocalStorage cleared!");
-//     };
+    const handleOk = async () => {
+        setLoadingSave(true);
+        if (arrObjArtikl.length === 0) {
+            notification.warning({ message: "Please insert at least one article." });
+            setLoadingSave(false);
+            return;
+        }
 
-//     const updateArtiklStorage = (objArr) => {
-//         const updatedArtikli = artikli.map((artikl) => {
-//             const foundArtikl = objArr.find((obj) => obj.nazivArtikla === artikl.artikl);
-//             if (foundArtikl) {
-//                 return {
-//                     ...artikl,
-//                     ukupnoProdano: parseInt(artikl.ukupnoProdano) + parseInt(foundArtikl.iznosOtpremnice)
-//                 };
-//             }
-//             return artikl;
-//         });
+        const prodanoObj = {
+            date: formatDateForServer(datum),
+            artikli: arrObjArtikl
+        };
 
-//         updatedArtikli.forEach((artikl) => {
-//             artiklStorage.editArtikl(artikl);
-//         });
-//         console.log("Artikli updated: " + updatedArtikli);
-//     };
+        try {
+            await ProdanoService.saveProdano(prodanoObj);
+            await updateArtiklStorage(arrObjArtikl);
 
-//     const handleSave = () => {
-//         if (!nazivArtikla || !iznosOtpremnice) return;
+            const res = await ProdanoService.getAllProdano();
+            setProdano(res.data);
 
-//         const objArtikl = {
-//             key: uuidv4(),
-//             nazivArtikla: nazivArtikla,
-//             iznosOtpremnice: iznosOtpremnice
-//         };
+            setVisibleModal(false);
+            resetForm();
+            notification.success({ message: "Prodano uspješno pohranjena!", placement: "topRight" });
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setLoadingSave(false);
+        }
+    };
 
-//         setArrObjArtikl((prev) => [...prev, objArtikl]);
+    const updateArtiklStorage = async (objArr) => {
+        setLoadingSave(true);
+        const updatedArtikli = artikli.map((artikl) => {
+            const foundArtikl = objArr.find((obj) => obj.nazivArtikla === artikl.naziv);
+            if (foundArtikl) {
+                return {
+                    ...artikl,
+                    kupljenaKolicina: parseFloat(artikl.kupljenaKolicina) + parseFloat(foundArtikl.kolicina),
+                };
+            }
+            return artikl;
+        });
 
-//         setNazivArtikla("");
-//         setIznosOtpremnice("");
-//     };
+        try {
+            await Promise.all(
+                updatedArtikli.map(async (artikl) => {
+                    await ArtikliService.editArtikl(artikl.id, artikl);
+                })
+            );
+        } catch (error) {
+            console.log("Error updating artikli: ", error);
+        } finally {
+            setLoadingSave(false);
+        }
+    };
 
-//     const handleOk = () => {
-//         if (arrObjArtikl.length === 0) {
-//             alert("Please insert at least one article.");
-//             return;
-//         }
+    const handleOpenModalDetails = (prodano) => {
+        setModalOpen(true);
+        setSelectedProdano(prodano);
+    };
 
-//         const otpremnicaObj = {
-//             key: uuidv4(),
-//             datum: datum.format('DD/MM/YYYY'),
-//             naziv: nazivOtpremnice,
-//             brojArtikla: brojArtikla,
-//             artikl: arrObjArtikl
-//         };
+    const handleDatum = (date) => {
+        setDatum(date);
+    };
 
-//         prodanoStorage.saveProdano(otpremnicaObj);
-//         console.log("Otpremnica saved: ", otpremnicaObj);
+    const handleDelete = (key) => {
+        setDeleteModal(true);
+        setKeyToDelete(key);
+        setIdObjProdano(key);
+    };
 
-//         updateArtiklStorage(arrObjArtikl);
+    const deleteItem = async (id) => {
+        setLoadingDelete(true);
+        try {
+            await ProdanoService.deleteProdano(id);
+            await updateDeletionArtiklStorage(id);
 
-//         setOtpremnice(prodanoStorage.getAll());
+            const res = await ProdanoService.getAllProdano();
+            setProdano(res.data);
 
-//         setVisibleArtiklModal(false);
-//         setVisibleModal(false);
-//         setNazivOtpremnice("");
-//         setBrojArtikla(0);
-//         setArrObjArtikl([]);
-//     };
+            notification.success({ message: "Prodano uspješno izbrisana!", placement: "topRight" });
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setLoadingDelete(false);
+            setDeleteModal(false);
+        }
+    };
 
-//     const handleOpenModalDetails = (otpremnica) => {
-//         setModalOpen(true);
-//         setSelectedOtpremnica(otpremnica);
-//     };
+    const updateDeletionArtiklStorage = async (id) => {
+        const prodanoItem = prodano.find(o => o.id === id);
+        if (!prodanoItem) return;
 
-//     const handleDatum = (date) => {
-//         setDatum(date);
-//     };
+        const updatedArtikli = artikli.map(artikl => {
+            const foundArtikl = prodanoItem.artikli.find(a => a.nazivArtikla === artikl.naziv);
+            if (foundArtikl) {
+                return {
+                    ...artikl,
+                    kupljenaKolicina: parseFloat(artikl.kupljenaKolicina) - parseFloat(foundArtikl.kolicina)
+                };
+            }
+            return artikl;
+        });
 
-//     return (
-//         <>
-//             <h1 style={{ textAlign: "center" }}>Prodano</h1>
-//             <div style={{ margin: "10px" }}>
-//                 <Button onClick={handleOpenModal} type="primary">
-//                     Novo Prodano
-//                 </Button>
-//                 <Button onClick={handleClear}>
-//                     Clear All
-//                 </Button>
-//             </div>
-//             <div>
-//                 {visibleModal && (
-//                     <Modal
-//                         visible={visibleModal}
-//                         onCancel={() => setVisibleModal(false)}
-//                         footer={null}
-//                     >
-//                         <div>
-//                             <label>Datum</label>
-//                             <DatePicker 
-//                                 defaultValue={datum} 
-//                                 format="DD/MM/YYYY" 
-//                                 value={datum} 
-//                                 onChange={handleDatum}
-//                                 style={{ width: "472px"}}
-//                             />
-//                             {/* <label>Naziv prodano</label>
-//                             <Input value={nazivOtpremnice} onChange={handleNazivOtpremnice} /> */}
-//                             <label>Broj artikla</label>
-//                             <Input value={brojArtikla} onChange={handleBrojArtikla} />
-//                             <Button type="primary" onClick={() => setVisibleArtiklModal(true)}>Dodaj Artikl</Button>
-//                         </div>
-//                         {visibleArtiklModal && brojArtikla !== 0 && Array.from({ length: brojArtikla }, (_, index) => (
-//                             <div key={index}>
-//                                 <h3>{`Unesi ${index + 1}. artikl: `}</h3>
-//                                 <label>Naziv artikla</label>
-//                                 <Select
-//                                     style={{ width: '100%' }}
-//                                     placeholder="Select an artikl"
-//                                     onChange={(value) => setNazivArtikla(value)}
-//                                     value={nazivArtikla}
-//                                 >
-//                                     {postojeciArtikli.map((artikl, idx) => (
-//                                         <Option key={idx} value={artikl}>{artikl}</Option>
-//                                     ))}
-//                                 </Select>
-//                                 <label>Iznos prodano</label>
-//                                 <Input value={iznosOtpremnice} onChange={(e) => setIznosOtpremnice(e.target.value)} />
-//                                 <Button onClick={handleSave}>Spremi Artikl</Button>
-//                             </div>
-//                         ))}
-//                         <Button type="primary" onClick={handleOk}>Spremi Prodano</Button>
-//                     </Modal>
-//                 )}
-//                 <div>
-//                     <ul style={{ listStyleType: "none" }}>
-//                         {otpremnice.map(o => (
-//                             <Button
-//                                 key={o.key}
-//                                 style={{ height: "160px", width: "160px", margin: "10px" }}
-//                                 onClick={() => handleOpenModalDetails(o)}
-//                             >
-//                                 <li key={o.key}>
-//                                     <h3>{o.datum}</h3>
-//                                     <p>{`Broj Artikla: ${o.brojArtikla}`}</p>
-//                                 </li>
-//                             </Button>
-//                         ))}
-//                     </ul>
-//                 </div>
-//                 {selectedOtpremnica && (
-//                     <OtpremnicaDetails
-//                         isOpen={modalOpen}
-//                         onClose={() => setModalOpen(false)}
-//                         otpremnica={selectedOtpremnica}
-//                         title={"Prodano"}
-//                     />
-//                 )}
-//             </div>
-//         </>
-//     );
-// };
+        try {
+            await Promise.all(
+                updatedArtikli.map(async (artikl) => {
+                    await ArtikliService.editArtikl(artikl.id, artikl);
+                })
+            );
+        } catch (error) {
+            console.log("Error updating artikli after deletion: ", error);
+        }
+    };
 
-// export default Prodano;
+    const handleSelectProdano = (id) => {
+        setIdObjProdano(id);
+    };
+
+    const handleOnClose = async () => {
+        setModalOpen(false);
+        const res = await ProdanoService.getAllProdano();
+        setProdano(res.data);
+    };
+
+    const handleCount = useCallback((id) => {
+        const prodanoItem = prodano.find(o => o.id === id);
+        return prodanoItem ? prodanoItem.artikli.length : 0;
+    }, [prodano]);
+
+    return (
+        <>
+        <div style={{ backgroundColor: "#0063a6", height: "50px", width: "100%" }}>
+            <div style={{ marginTop: "-10px" }}>
+                <h1 style={{ textAlign: "center", color: "white", marginTop: "0px" }}>Prodano</h1>
+            </div>
+        </div>
+        <div style={{ margin: "10px" }}>
+            <Button onClick={handleOpenModal} type="primary">
+                Nova prodano
+            </Button>
+        </div>
+        <div>
+            {visibleModal && (
+                <Modal
+                    visible={visibleModal}
+                    onCancel={() => setVisibleModal(false)}
+                    footer={null}
+                >
+                    <div>
+                        <label>Datum</label>
+                        <DatePicker
+                            defaultValue={datum}
+                            format="DD/MM/YYYY"
+                            value={datum}
+                            onChange={handleDatum}
+                            style={{ width: "472px" }}
+                        />
+                    </div>
+                    <div>
+                        <h3>Unesi artikle:</h3>
+                        <label>Naziv artikla</label>
+                        <Select
+                            style={{ width: '100%' }}
+                            placeholder="Select an artikl"
+                            onChange={(value) => setNazivArtikla(value)}
+                            value={nazivArtikla}
+                        >
+                            {postojeciArtikli.map((artikl, idx) => (
+                                <Option key={idx} value={artikl}>{artikl}</Option>
+                            ))}
+                        </Select>
+                        <label>Količina</label>
+                        <Input value={iznosProdano} onChange={(e) => setIznosProdano(e.target.value)} />
+                        <Button onClick={handleSaveArtikl}>Dodaj Artikl</Button>
+                        <ul>
+                            {arrObjArtikl.map((artikl, idx) => (
+                                <li key={idx}>{`${artikl.nazivArtikla}: ${artikl.kolicina}`}</li>
+                            ))}
+                        </ul>
+                    </div>
+                    <Button type="primary" onClick={handleOk}>
+                        {loadingSave ? 
+                            <div style={{ backgroundColor: "black"}}>
+                                <Spin />
+                            </div> : "Spremi Otpremnicu"}
+                    </Button>
+                </Modal>
+            )}
+            <Spin spinning={loadingFetch}>
+                <div style={{ marginLeft: "0px", marginRight: "0px", width: "100%" }}>
+                    <ul style={{ listStyleType: "none", display: "flex", flexWrap: "wrap", padding: 0 }}>
+                        {prodano.map((o) => (
+                            <div key={o.id}>
+                                <Button
+                                    style={{ height: "160px", width: "160px", margin: "10px" }}
+                                    onClick={() => {
+                                        handleOpenModalDetails(o);
+                                        handleSelectProdano(o.id);
+                                    }}
+                                >
+                                    <li>
+                                        <h3>{formatDateForDisplay(dayjs(o.date))}</h3>
+                                        <p>{`Broj Artikla: ${handleCount(o.id)}`}</p>
+                                    </li>
+                                </Button>
+                                <div style={{ display: "flex", flexDirection: "column", margin: "10px", marginTop: "-10px" }}>
+                                    <button 
+                                        onClick={() => handleDelete(o.id)}
+                                        style={{ color: "red"}}
+                                    >
+                                        <DeleteOutlined />
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </ul>
+                </div>
+            </Spin>
+            {deleteModal && (
+                <DeleteModal
+                    isOpen={deleteModal}
+                    title={"otpremnicu"}
+                    handleDelete={() => deleteItem(keyToDelete)}
+                    onClose={() => setDeleteModal(false)}
+                    loading={loadingDelete}
+                />
+            )}
+            <ProdanoDetails
+                isOpen={modalOpen}
+                onClose={() => handleOnClose()}
+                storageItem={selectedProdano}
+                title={"Prodano"}
+                id={idObjProdano}
+                storage={prodano}
+            />
+        </div>
+    </>
+    );
+};
+
+export default Prodano;
