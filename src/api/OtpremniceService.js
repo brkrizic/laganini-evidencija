@@ -30,5 +30,14 @@ export const OtpremniceService = {
         } catch (error) {
             console.log(error);
         }
+    },
+    editOtpremnica: async (id, params) => {
+        try {
+            const response = await axios.put(`${baseUrl}/api/otpremnice/${id}`, params, {headers});
+            console.log(response);
+            return response;
+        } catch (error) {
+            console.log(error);
+        }
     }
 }

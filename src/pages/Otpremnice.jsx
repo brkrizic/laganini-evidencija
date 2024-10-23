@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from 'uuid';
 import OtpremnicaDetails from "../modal/OtpremnicaDetails";
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import dayjs from 'dayjs';
-import { DeleteOutlined } from "@ant-design/icons";
+import { DeleteOutlined, LoadingOutlined } from "@ant-design/icons";
 import DeleteModal from "../modal/DeleteModal";
 import { ArtikliService } from "../api/ArtikliService";
 import { OtpremniceService } from "../api/OtpremniceService";
@@ -20,7 +20,6 @@ const Otpremnice = () => {
     const [postojeciArtikli, setPostojeciArtikli] = useState([]);
     const [iznosOtpremnice, setIznosOtpremnice] = useState("");
     const [visibleModal, setVisibleModal] = useState(false);
-    const [brojArtikla, setBrojArtikla] = useState("");
     const [visibleArtiklModal, setVisibleArtiklModal] = useState(false);
     const [otpremnice, setOtpremnice] = useState([]);
     const [arrObjArtikl, setArrObjArtikl] = useState([]);
@@ -32,11 +31,11 @@ const Otpremnice = () => {
     const [loadingFetch, setLoadingFetch] = useState(false);
     const [loadingSave, setLoadingSave] = useState(false);
     const [loadingDelete, setLoadingDelete] = useState(false);
-    const [idArtikl, setIdArtikl] = useState();
+    const [idObjOtpremnica, setIdObjOtpremnica] = useState();
 
     useEffect(() => {
         const fetchData = async () => {
-            setLoadingFetch(true)
+            setLoadingFetch(true);
             try {
                 const resArtikli = await ArtikliService.getAllArtikli();
                 const artikliData = resArtikli.data;
@@ -58,15 +57,8 @@ const Otpremnice = () => {
 
     const handleOpenModal = () => {
         setVisibleModal(!visibleModal);
-        setBrojArtikla("");
         setArrObjArtikl([]);
         setNazivOtpremnice("");
-    };
-
-    const handleBrojArtikla = (e) => {
-        const currentValue = e.target.value;
-        const convertedValue = parseInt(currentValue) || 0;
-        setBrojArtikla(convertedValue);
     };
 
     const handleNazivOtpremnice = (e) => {
@@ -77,8 +69,6 @@ const Otpremnice = () => {
         setLoadingSave(true);
         const updatedArtikl = artikli.map((artikl) => {
             const foundArtikl = objArr.find((obj) => obj.nazivArtikla === artikl.naziv);
-            console.log("Found artikl: ", foundArtikl);
-            
             if (foundArtikl) {
                 return {
                     ...artikl,
@@ -87,33 +77,27 @@ const Otpremnice = () => {
             }
             return artikl;
         });
-    
+
         try {
-            // Using Promise.all to wait for all updates
             await Promise.all(
                 updatedArtikl.map(async (artikl) => {
                     await ArtikliService.editArtikl(artikl.id, artikl);
-                    console.log("Artikl updated: ", artikl);
                 })
             );
-            console.log("Artikli updated: ", JSON.stringify(updatedArtikl));
         } catch (error) {
             console.log("Error updating artikli: ", error);
         } finally {
-            setLoadingSave(false); // Move this outside the loop to ensure it's set after all updates
+            setLoadingSave(false);
         }
     };
 
-    const handleSave = () => {
+    const handleSaveArtikl = () => {
         const objArtikl = {
-            // id: uuidv4(),
             nazivArtikla: nazivArtikla,
             kolicina: iznosOtpremnice
         };
 
         setArrObjArtikl((prev) => [...prev, objArtikl]);
-        console.log("Current articles: ", arrObjArtikl);
-
         setNazivArtikla("");
         setIznosOtpremnice("");
     };
@@ -125,17 +109,22 @@ const Otpremnice = () => {
             return;
         }
 
-        const key = uuidv4(); // Generate a unique key
-
         const otpremnicaObj = {
-            // id: key,
             date: formatDateForServer(datum),
             artikli: arrObjArtikl
         };
 
         try {
             await OtpremniceService.saveOtpremnica(otpremnicaObj);
-            console.log("Otpremnica saved: ", otpremnicaObj);
+            await updateArtiklStorage(arrObjArtikl);
+
+            const res = await OtpremniceService.getAllOtpremnice();
+            setOtpremnice(res.data);
+
+            setVisibleArtiklModal(false);
+            setVisibleModal(false);
+            setNazivOtpremnice("");
+            setArrObjArtikl([]);
         } catch (error) {
             console.log(error);
         } finally {
@@ -145,26 +134,7 @@ const Otpremnice = () => {
         notification.success({
             message: "Otpremnica uspješno pohranjena!",
             placement: "topRight"
-        })
-
-        try {
-            await updateArtiklStorage(arrObjArtikl);
-            console.log("arrObjArtikl: " + arrObjArtikl);
-        } catch (error) {
-            console.log(error);
-        } finally {
-            setLoadingSave(false);
-        }
-
-        const res = await OtpremniceService.getAllOtpremnice();
-        const otpremniceData = res.data;
-        setOtpremnice(otpremniceData);
-
-        setVisibleArtiklModal(false);
-        setVisibleModal(false);
-        setNazivOtpremnice("");
-        setBrojArtikla("");
-        setArrObjArtikl([]);
+        });
     };
 
     const handleOpenModalDetails = (otpremnica) => {
@@ -179,12 +149,14 @@ const Otpremnice = () => {
     const handleDelete = (key) => {
         setDeleteModal(true);
         setKeyToDelete(key);
+        setIdObjOtpremnica(key);
     };
 
     const deleteItem = async (id) => {
         setLoadingDelete(true);
         try {
             await OtpremniceService.deleteOtpremnica(id);
+            await updateDeletionArtiklStorage(id);
         } catch (error) {
             console.log(error);
         } finally {
@@ -195,21 +167,56 @@ const Otpremnice = () => {
         notification.success({
             message: "Otpremnica uspješno izbrisana!",
             placement: "topRight"
-        })
+        });
 
         const res = await OtpremniceService.getAllOtpremnice();
-        const otpremniceData = res.data;
-        setOtpremnice(otpremniceData);
+        setOtpremnice(res.data);
     };
 
     const handleCount = (id) => {
-       const otpremnica = otpremnice.find(o => o.id === id);
-       return otpremnica ? otpremnica.artikli.length : 0;
+        const otpremnica = otpremnice.find(o => o.id === id);
+        return otpremnica ? otpremnica.artikli.length : 0;
+    }
+
+    const updateDeletionArtiklStorage = async (id) => {
+        const otpremnica = otpremnice.find(o => o.id === id);
+        if(!otpremnica) return;
+
+        const updatedArtikl = artikli.map(artikl => {
+            const foundArtikl = otpremnica.artikli.find(a => a.nazivArtikla === artikl.naziv);
+            if(foundArtikl){
+                return {
+                    ...artikl,
+                    kupljenaKolicina: parseFloat(artikl.kupljenaKolicina) - parseFloat(foundArtikl.kolicina)
+                };
+            }
+            return artikl;
+        });
+
+        try {
+            await Promise.all(
+                updatedArtikl.map(async (artikl) => {
+                    await ArtikliService.editArtikl(artikl.id, artikl);
+                    console.log("Artikl updated: ", artikl);
+                })
+            );
+            console.log("Artikli updated after deletion: ", JSON.stringify(updatedArtikl));
+        } catch (error) {
+            console.log("Error updating artikli after deletion: ", error);
+        }
+    };
+
+    const handleSelectOtpremnica = (id) => {
+        setIdObjOtpremnica(id);
     }
 
     return (
         <>
-            <h1 style={{ textAlign: "center" }}>Otpremnice</h1>
+            <div style={{ backgroundColor: "#0063a6", height: "50px", width: "100%" }}>
+                <div style={{ marginTop: "-10px" }}>
+                    <h1 style={{ textAlign: "center", color: "white", marginTop: "0px" }}>Otpremnice</h1>
+                </div>
+            </div>
             <div style={{ margin: "10px" }}>
                 <Button onClick={handleOpenModal} type="primary">
                     Nova otpremnica
@@ -231,45 +238,48 @@ const Otpremnice = () => {
                                 onChange={handleDatum}
                                 style={{ width: "472px" }}
                             />
-
-                            <label>Broj artikla</label>
-                            <Input value={brojArtikla} onChange={handleBrojArtikla} />
-                            <Button type="primary" onClick={() => setVisibleArtiklModal(true)}>Dodaj Artikl</Button>
                         </div>
-                        {visibleArtiklModal && brojArtikla !== 0 && Array.from({ length: brojArtikla }).map((_, index) => (
-                            <div key={index}>
-                                <h3>
-                                    {`Unesi ${index + 1}. artikl: `}
-                                </h3>
-                                <label>Naziv artikla</label>
-                                <Select
-                                    style={{ width: '100%' }}
-                                    placeholder="Select an artikl"
-                                    onChange={(value) => setNazivArtikla(value)}
-                                    value={nazivArtikla}
-                                >
-                                    {postojeciArtikli.map((artikl, idx) => (
-                                        <Option key={idx} value={artikl}>{artikl}</Option>
-                                    ))}
-                                </Select>
-                                <label>Iznos otpremnice</label>
-                                <Input value={iznosOtpremnice} onChange={(e) => setIznosOtpremnice(e.target.value)} />
-                                <Button onClick={handleSave}>Spremi Artikl</Button>
-                            </div>
-                        ))}
+                        <div>
+                            <h3>Unesi artikle:</h3>
+                            <label>Naziv artikla</label>
+                            <Select
+                                style={{ width: '100%' }}
+                                placeholder="Select an artikl"
+                                onChange={(value) => setNazivArtikla(value)}
+                                value={nazivArtikla}
+                            >
+                                {postojeciArtikli.map((artikl, idx) => (
+                                    <Option key={idx} value={artikl}>{artikl}</Option>
+                                ))}
+                            </Select>
+                            <label>Količina</label>
+                            <Input value={iznosOtpremnice} onChange={(e) => setIznosOtpremnice(e.target.value)} />
+                            <Button onClick={handleSaveArtikl}>Dodaj Artikl</Button>
+                            <ul>
+                                {arrObjArtikl.map((artikl, idx) => (
+                                    <li key={idx}>{`${artikl.nazivArtikla}: ${artikl.kolicina}`}</li>
+                                ))}
+                            </ul>
+                        </div>
                         <Button type="primary" onClick={handleOk}>
-                            {loadingSave ? <Spin /> : "Spremi Otpremnicu"}
+                            {loadingSave ? 
+                                <div style={{ backgroundColor: "black"}}>
+                                    <Spin />
+                                </div> : "Spremi Otpremnicu"}
                         </Button>
                     </Modal>
                 )}
                 <Spin spinning={loadingFetch}>
-                    <div>
+                    <div style={{ marginLeft: "0px", marginRight: "0px", width: "100%"}}>
                         <ul style={{ listStyleType: "none", display: "flex", flexWrap: "wrap", padding: 0 }}>
                             {otpremnice.map((o) => (
                                 <div key={o.id}>
                                     <Button
                                         style={{ height: "160px", width: "160px", margin: "10px" }}
-                                        onClick={() => handleOpenModalDetails(o)}
+                                        onClick={() => {
+                                            handleOpenModalDetails(o);
+                                            handleSelectOtpremnica(o.id);
+                                        }}
                                     >
                                         <li>
                                             <h3>{formatDateForDisplay(dayjs(o.date))}</h3>
@@ -277,7 +287,10 @@ const Otpremnice = () => {
                                         </li>
                                     </Button>
                                     <div style={{ display: "flex", flexDirection: "column", margin: "10px", marginTop: "-10px" }}>
-                                        <button onClick={() => handleDelete(o.id)}>
+                                        <button 
+                                            onClick={() => handleDelete(o.id)}
+                                            style={{ color: "red"}}
+                                        >
                                             <DeleteOutlined />
                                         </button>
                                     </div>
@@ -298,8 +311,10 @@ const Otpremnice = () => {
                 <OtpremnicaDetails
                     isOpen={modalOpen}
                     onClose={() => setModalOpen(false)}
-                    otpremnica={selectedOtpremnica}
+                    storageItem={selectedOtpremnica}
                     title={"Otpremnica"}
+                    id={idObjOtpremnica}
+                    storage={otpremnice}
                 />
             </div>
         </>

@@ -55,7 +55,7 @@ const UkupnaEvidencija = () => {
             className: "mainColumn"
         },
         {
-            title: "Evidencija stanja",
+            title: "Evidencija stanja (L)",
             dataIndex: "evidencijaStanja",
             key: "evidencijaStanja",
             align: "center",
@@ -64,7 +64,7 @@ const UkupnaEvidencija = () => {
             )
         },
         {
-            title: "Evidencija robe",
+            title: "Evidencija robe (L)",
             dataIndex: "evidencijaRobe",
             key: "evidencijaRobe",
             align: "center",
@@ -73,7 +73,7 @@ const UkupnaEvidencija = () => {
             )
         },
         {
-            title: "Razlika",
+            title: "Razlika (L)",
             dataIndex: "razlika",
             key: "razlika",
             align: "center",
@@ -96,36 +96,36 @@ const UkupnaEvidencija = () => {
                 );
             }
         },
+        // {
+        //     title: "Akcije",
+        //     key: "action",
+        //     align: "center",
+        //     render: (_, record) => (
+        //         <>
+        //             <Button
+        //                 type="default"
+        //                 onClick={() => showEditModal(record)}
+        //                 icon={<EditOutlined />}
+        //                 style={{ color: "blue" }}
+        //             >
+        //             </Button>
+        //             <Button
+        //                 type="danger"
+        //                 onClick={() => handleDelete(record.key)}
+        //                 icon={<DeleteOutlined />}
+        //                 style={{ marginLeft: 8, color: "red" }}
+        //             >
+        //             </Button>
+        //         </>
+        //     ),
+        // },
         {
-            title: "Akcije",
-            key: "action",
-            align: "center",
-            render: (_, record) => (
-                <>
-                    <Button
-                        type="default"
-                        onClick={() => showEditModal(record)}
-                        icon={<EditOutlined />}
-                        style={{ color: "blue" }}
-                    >
-                    </Button>
-                    <Button
-                        type="danger"
-                        onClick={() => handleDelete(record.key)}
-                        icon={<DeleteOutlined />}
-                        style={{ marginLeft: 8, color: "red" }}
-                    >
-                    </Button>
-                </>
-            ),
-        },
-        {
-            title: "Ukupno prodano",
+            title: "Ukupno prodano (L)",
             key: "prodajnaKolicina",
             dataIndex: "prodajnaKolicina"
         },
         {
-            title: "Ukupno kupljeno",
+            title: "Ukupno kupljeno (L)",
             key: "kupljenaKolcina",
             dataIndex: "kupljenaKolicina"
         }
@@ -210,11 +210,15 @@ const UkupnaEvidencija = () => {
     };
 
     return (
-        <div style={{ margin: "10px" }}>
-            <h1 style={{ textAlign: "center" }}>Ukupna evidencija</h1>
-            <Button type="primary" onClick={showAddModal} style={{ marginBottom: 16 }}>
+        <div>
+            <div style={{ backgroundColor: "#0063a6", height: "50px", width: "100%"}}>
+                <div style={{ marginTop: "-10px"}}>
+                    <h1 style={{ textAlign: "center", color: "white", marginTop: "-10px"}}>Ukupna evidencija</h1>
+                </div>
+            </div>
+            {/* <Button type="primary" onClick={showAddModal} style={{ marginBottom: 16 }}>
                 Add Item
-            </Button>
+            </Button> */}
             <Spin spinning={loading}>
                 <div style={{ display: "flex", flexDirection: "row", margin: "10px", marginLeft: "10px" }}>
                     <Table
