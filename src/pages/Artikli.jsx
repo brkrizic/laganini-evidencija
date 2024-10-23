@@ -1,54 +1,42 @@
 import React, { useEffect, useState } from "react";
 import { v4 as uuidv4 } from 'uuid';
-import { artiklStorage } from "../storage/artikliStorage";
-import { Tag } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
-import axios from "axios";
+import { ArtikliService } from "../api/ArtikliService";
+import DeleteModal from "../modal/DeleteModal";
+import { notification } from "antd";
 
 const Artikli = () => {
     const [nazivArtikl, setNazivArtikl] = useState("");
     const [artikli, setArtikli] = useState([]);
+    const [deleteModal, setDeleteModal] = useState(false);
+    const [id, setId] = useState();
 
-    const apiKey = "14DFB1BA-063C-43D9-8D5C-3020B1D9782D"; // Replace with your dynamic key if necessary
-
-    async function fetchApi() {
-        try {
-            const response = await axios.get("http://localhost:8080/api/artikli", {
-                headers: {
-                    "X-API-KEY": apiKey,
-                    "Content-Type": "application/json"
+    useEffect(() => {
+        async function fetchApi() {
+            try {
+                const response = await ArtikliService.getAllArtikli(); // Added await
+                console.log("Response Data:", response);
+                setArtikli(response.data); // No need to use response.data here since the function already returns data
+                console.log(artikli);
+            } catch (error) {
+                console.error("Error:", error.message);
+                if (error.response) {
+                    console.error("Response data:", error.response.data);
                 }
-            });
-            console.log("Response Data:", response.data);
-        } catch (error) {
-            console.error("Error:", error.message);
-            if (error.response) {
-                console.error("Response data:", error.response.data);
             }
         }
-    }
-    
-    useEffect(() => {
-        console.log("API Key being sent:", apiKey); // Log to confirm it's not null
         fetchApi();
-    }, []);
-
-    useEffect(() => {
-        const sviArtikli = artiklStorage.getAll();
-        setArtikli(sviArtikli);
-        console.log(sviArtikli);
-        console.log(artikli);
-    }, []);
+    }, [artikli]);
 
     const handleNazivArtikla = (e) => {
         setNazivArtikl(e.target.value);
     }
 
-    const spremiArtikl = () => {
+    const spremiArtikl = async () => { // Make this function async to await saveArtikl
         const key = uuidv4();
         const artikliObj = {
             key: key,
-            artikl: nazivArtikl,
+            naziv: nazivArtikl,
             evidencijaRobe: 0,
             evidencijaStanja: 0,
             razlika: 0,
@@ -56,36 +44,74 @@ const Artikli = () => {
             ukupnoProdano: 0
         };
 
-        artiklStorage.addArtikl(artikliObj);
-        setArtikli((prev) => [...prev, artikliObj]);
-        setNazivArtikl("");
+        try {
+            await ArtikliService.saveArtikl(artikliObj); // Await saveArtikl
+            setArtikli((prev) => [...prev, artikliObj]);
+            setNazivArtikl("");
+
+            notification.success({
+                message: "Uspješno dodan artikl!",
+                placement: "topRight"
+            })
+        } catch (error) {
+            console.error("Error saving artikl:", error);
+        }
     }
 
-    const handleDelete = (key) => {
-        artiklStorage.deleteArtikl(key);
+    const handleDelete = async (key) => { // Make this function async to await deleteArtikl
+        try {
+            await ArtikliService.deleteArtikl(key); // Await deleteArtikl
+            setArtikli((prev) => prev.filter(artikl => artikl.key !== key));
+            setDeleteModal(false);
 
+            notification.success({
+                message: "Uspješno brisanje",
+                placement: "topRight"
+            })
+
+            setArtikli(prev => [...prev, ])
+        } catch (error) {
+            console.error("Error deleting artikl:", error);
+            notification.error({
+                message: "Neuspješno brisanje",
+                placement: "topRight"
+            })
+        }
+    }
+    const btnDelete = (key) => {
+        setDeleteModal(true);
+        setId(key);
     }
 
-    return(
+    return (
         <div>
-            <h1>Artikli</h1>
-            <div>
+            <h1 style={{ textAlign: "center"}}>Artikli</h1>
+            <div style={{ marginLeft: "10px"}}>
                 <h3>Unesi novi artikl</h3>
                 <label>Naziv: </label>
                 <input value={nazivArtikl} onChange={handleNazivArtikla}></input>
                 <button onClick={spremiArtikl}>Spremi</button>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column"}}>
-                
+            <div>
+                <ul style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", padding: "0", listStyleType: "none" }}>
                     {artikli.map(artikl => (
-                        <div style={{ border: "1px solid black", margin: "10px", width: "90px", height: "76px"}}>
-                            <p style={{textAlign: "center"}} key={artikl.key}>{artikl.artikl}</p>
-                            <button onClick={handleDelete(artikl.key)}><DeleteOutlined/></button>
+                        <div key={artikl.id} style={{ border: "1px solid black", margin: "10px", width: "270px", height: "76px", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 10px" }}>
+                            <li>
+                                <p style={{ textAlign: "center", margin: "0" }}>{artikl.naziv}</p>
+                            </li>
+                            <button onClick={() => btnDelete(artikl.id)} style={{ border: "none", background: "none", cursor: "pointer" }}>
+                                <DeleteOutlined />
+                            </button>
                         </div>
                     ))}
-                
+                </ul>
             </div>
+            <DeleteModal
+                isOpen={deleteModal}
+                handleDelete={() => handleDelete(id)}
+                onClose={() => setDeleteModal(false)}
+            />
         </div>
     );
 }

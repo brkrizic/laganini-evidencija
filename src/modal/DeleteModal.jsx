@@ -9,8 +9,9 @@ const DeleteModal = (props) => {
         setIsOpen(props.isOpen);
     }, [props.isOpen]);
 
-    const handleCancel = () => {
+    const handleOnClose = () => {
         setIsOpen(false);
+        props.onClose();
     }
 
     return (
@@ -18,7 +19,7 @@ const DeleteModal = (props) => {
             <Modal
                 visible={isOpen}
                 onOk={props.handleDelete}
-                onCancel={handleCancel}
+                onCancel={handleOnClose}
                 okText="Delete"
                 okType="danger"
                 cancelText="Cancel"

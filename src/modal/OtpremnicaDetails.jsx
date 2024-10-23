@@ -1,5 +1,6 @@
 import { Form, Modal } from "antd";
 import React, { useEffect, useState } from "react";
+import { formatDateForDisplay } from "../convert/dateConverter";
 
 const OtpremnicaDetails = (props) => {
     const [isModalOpen, setIsModalOpen] = useState(props.isOpen);
@@ -24,21 +25,21 @@ const OtpremnicaDetails = (props) => {
             <Form>
                 <Form.Item>
                         {/* <h3>{`Naziv ${props.title}: ${props.otpremnica?.naziv || ""}`}</h3> */}
-                        <p>{`Datum: ${props.otpremnica?.datum || ""}`}</p>
-                        <p>{`Broj artikla: ${props.otpremnica?.brojArtikla || 0}`}</p>
+                        <p>{`Datum: ${props.otpremnica ? formatDateForDisplay(props.otpremnica.date) : ""}`}</p>
+                        {/* <p>{`Broj artikla: ${props.otpremnica?.brojArtikla || 0}`}</p> */}
                         <p>Artikli:</p>
                         <table style={{ paddingLeft: 20, borderCollapse: 'collapse', width: '100%' }}>
                             <thead>
                                 <tr>
                                     <th style={{ border: '1px solid black', padding: '8px' }}>Naziv artikla</th>
-                                    <th style={{ border: '1px solid black', padding: '8px' }}>{props.title}</th>
+                                    <th style={{ border: '1px solid black', padding: '8px' }}>Kolicina</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {props.otpremnica?.artikl?.map((a, index) => (
+                                {props.otpremnica?.artikli?.map((a, index) => (
                                     <tr key={index}>
                                         <td style={{ border: '1px solid black', padding: '8px' }}>{a.nazivArtikla}</td>
-                                        <td style={{ border: '1px solid black', padding: '8px', textAlign: "center" }}>{a.iznosOtpremnice}</td>
+                                        <td style={{ border: '1px solid black', padding: '8px', textAlign: "center" }}>{a.kolicina}</td>
                                     </tr>
                                 )) || (
                                     <tr>

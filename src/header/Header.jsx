@@ -1,40 +1,50 @@
 import React from "react";
 import Inventura from "../pages/Inventura";
 import { Button } from "antd";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const Header = () => {
     const navigate = useNavigate();
+    const location = useLocation();
+
     const buttons = [
     {
         name: "Ukupna evidencija",
-        onClick: () => navigate("/")
+        path: "/"
     }, 
     {
         name: "Otpremnice",
-        onClick: () => navigate("/otpremnice")
+        path: "/otpremnice"
     }, 
     {
         name: "Prodano",
-        onClick: () => navigate("/prodano")
+        path: "/prodano"
     }, 
     {
         name: "Inventura",
-        onClick: () => navigate("/inventura")
+        path: "/inventura"
     },
     {
         name: "Artikli",
-        onClick: () => navigate("/artikli")
+        path: "/artikli"
     }
 ]
 
 return(
-    <div>
-    {buttons.map((btn, index) => (
-      <Button key={index} onClick={btn.onClick}>
-        {btn.name}
-      </Button>
-    ))}
+    <div style={{ width: "99%", margin: "10px"}}>
+        {buttons.map((btn, index) => (
+        <Button 
+            key={index} 
+            onClick={() => navigate(btn.path)} 
+            style={{ 
+                width: "250px", 
+                backgroundColor: location.pathname === btn.path ? "#0d487f" : "",
+                color: location.pathname === btn.path ? "white" : ""
+            }}
+        >
+            {btn.name}
+        </Button>
+        ))}
   </div>
 );
 }
