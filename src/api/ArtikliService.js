@@ -31,9 +31,9 @@ export const ArtikliService = {
             console.log(error);
         }
     },
-    editArtikl: async (id) => {
+    editArtikl: async (id, params) => {
         try {
-            const response = await axios.put(`${baseUrl}/api/artikli`, id, {headers});
+            const response = await axios.put(`${baseUrl}/api/artikli/${id}`, params, {headers});
             console.log(response);
             return response;
         } catch (error) {

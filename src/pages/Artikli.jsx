@@ -3,36 +3,40 @@ import { v4 as uuidv4 } from 'uuid';
 import { DeleteOutlined } from "@ant-design/icons";
 import { ArtikliService } from "../api/ArtikliService";
 import DeleteModal from "../modal/DeleteModal";
-import { notification } from "antd";
+import { Spin, notification } from "antd";
 
 const Artikli = () => {
     const [nazivArtikl, setNazivArtikl] = useState("");
     const [artikli, setArtikli] = useState([]);
     const [deleteModal, setDeleteModal] = useState(false);
     const [id, setId] = useState();
+    const [loadingFetch, setLoadingFetch] = useState(false);
+    const [loadingSave, setLoadingSave] = useState(false);
+    const [loadingDelete, setLoadingDelete] = useState(false);
 
     useEffect(() => {
         async function fetchApi() {
+            setLoadingFetch(true);
             try {
-                const response = await ArtikliService.getAllArtikli(); // Added await
-                console.log("Response Data:", response);
-                setArtikli(response.data); // No need to use response.data here since the function already returns data
-                console.log(artikli);
+                const response = await ArtikliService.getAllArtikli();
+                setArtikli(response.data);
             } catch (error) {
                 console.error("Error:", error.message);
                 if (error.response) {
                     console.error("Response data:", error.response.data);
                 }
+            } finally {
+                setLoadingFetch(false);
             }
         }
         fetchApi();
-    }, [artikli]);
+    }, []);
 
     const handleNazivArtikla = (e) => {
         setNazivArtikl(e.target.value);
     }
 
-    const spremiArtikl = async () => { // Make this function async to await saveArtikl
+    const spremiArtikl = async () => {
         const key = uuidv4();
         const artikliObj = {
             key: key,
@@ -44,40 +48,45 @@ const Artikli = () => {
             ukupnoProdano: 0
         };
 
+        setLoadingSave(true);
         try {
-            await ArtikliService.saveArtikl(artikliObj); // Await saveArtikl
+            await ArtikliService.saveArtikl(artikliObj);
             setArtikli((prev) => [...prev, artikliObj]);
             setNazivArtikl("");
 
             notification.success({
                 message: "Uspješno dodan artikl!",
                 placement: "topRight"
-            })
+            });
         } catch (error) {
             console.error("Error saving artikl:", error);
+        } finally {
+            setLoadingSave(false);
         }
     }
 
-    const handleDelete = async (key) => { // Make this function async to await deleteArtikl
+    const handleDelete = async (key) => {
+        setLoadingDelete(true);
         try {
-            await ArtikliService.deleteArtikl(key); // Await deleteArtikl
+            await ArtikliService.deleteArtikl(key);
             setArtikli((prev) => prev.filter(artikl => artikl.key !== key));
             setDeleteModal(false);
 
             notification.success({
                 message: "Uspješno brisanje",
                 placement: "topRight"
-            })
-
-            setArtikli(prev => [...prev, ])
+            });
         } catch (error) {
             console.error("Error deleting artikl:", error);
             notification.error({
                 message: "Neuspješno brisanje",
                 placement: "topRight"
-            })
+            });
+        } finally {
+            setLoadingDelete(false);
         }
     }
+
     const btnDelete = (key) => {
         setDeleteModal(true);
         setId(key);
@@ -85,28 +94,32 @@ const Artikli = () => {
 
     return (
         <div>
-            <h1 style={{ textAlign: "center"}}>Artikli</h1>
-            <div style={{ marginLeft: "10px"}}>
+            <h1 style={{ textAlign: "center" }}>Artikli</h1>
+            <div style={{ marginLeft: "10px" }}>
                 <h3>Unesi novi artikl</h3>
                 <label>Naziv: </label>
                 <input value={nazivArtikl} onChange={handleNazivArtikla}></input>
-                <button onClick={spremiArtikl}>Spremi</button>
+                <button onClick={spremiArtikl} disabled={loadingSave}>
+                    {loadingSave ? <Spin /> : 'Spremi'}
+                </button>
             </div>
 
-            <div>
-                <ul style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", padding: "0", listStyleType: "none" }}>
-                    {artikli.map(artikl => (
-                        <div key={artikl.id} style={{ border: "1px solid black", margin: "10px", width: "270px", height: "76px", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 10px" }}>
-                            <li>
-                                <p style={{ textAlign: "center", margin: "0" }}>{artikl.naziv}</p>
-                            </li>
-                            <button onClick={() => btnDelete(artikl.id)} style={{ border: "none", background: "none", cursor: "pointer" }}>
-                                <DeleteOutlined />
-                            </button>
-                        </div>
-                    ))}
-                </ul>
-            </div>
+            <Spin spinning={loadingFetch}>
+                <div>
+                    <ul style={{ display: "flex", flexDirection: "row", flexWrap: "wrap", padding: "0", listStyleType: "none" }}>
+                        {artikli.map(artikl => (
+                            <div key={artikl.id} style={{ border: "1px solid black", margin: "10px", width: "270px", height: "76px", display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0 10px" }}>
+                                <li>
+                                    <p style={{ textAlign: "center", margin: "0" }}>{artikl.naziv}</p>
+                                </li>
+                                <button onClick={() => btnDelete(artikl.id)} style={{ border: "none", background: "none", cursor: "pointer" }} disabled={loadingDelete}>
+                                    {loadingDelete && id === artikl.id ? <Spin /> : <DeleteOutlined />}
+                                </button>
+                            </div>
+                        ))}
+                    </ul>
+                </div>
+            </Spin>
             <DeleteModal
                 isOpen={deleteModal}
                 handleDelete={() => handleDelete(id)}

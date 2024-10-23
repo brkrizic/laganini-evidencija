@@ -36,3 +36,7 @@
     transform: rotate(360deg);
   }
 }
+
+.custom-spin .ant-spin-dot-item {
+  background-color: black; /* Change this to your desired color */
+}

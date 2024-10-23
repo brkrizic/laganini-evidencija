@@ -1,5 +1,5 @@
 import { ExclamationCircleOutlined } from "@ant-design/icons";
-import { Modal } from "antd";
+import { Modal, Spin } from "antd";
 import React, { useEffect, useState } from "react";
 
 const DeleteModal = (props) => {
@@ -24,10 +24,12 @@ const DeleteModal = (props) => {
                 okType="danger"
                 cancelText="Cancel"
             >
+                <Spin spinning={props.loading}>
                 <div style={{ textAlign: 'center', display: "flex", flexDirection: "row"}}>
                     <ExclamationCircleOutlined style={{ fontSize: '24px', color: 'red', marginRight:"30px" }} />
                     <p>Jeste li sigurni da želite izbrisati?</p>
                 </div>
+                </Spin>
             </Modal>
         </>
     );
