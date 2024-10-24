@@ -35,7 +35,7 @@ const Konverzacija = () => {
                 </div>
             </div>
 
-            <div style={{ width: '300px', textAlign: 'right', margin: '40px auto', marginTop: '150px', marginLeft: '770px'}}>
+            <div style={{ width: '300px', textAlign: 'right', margin: '40px auto', marginTop: '110px', marginLeft: '470px'}}>
                 <Input 
                     type="number" 
                     value={inputValue} 
