@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Table, Spin, notification } from "antd";
+import { Table, Spin, notification, Button } from "antd";
 import "./styles/stylesTable.css";
 import { ArtikliService } from "../api/ArtikliService";
 
@@ -12,7 +12,7 @@ const UkupnaEvidencija = () => {
         try {
             const res = await ArtikliService.getAllArtikli();
             const resData = res.data;
-            const updatedData = resData; // Update data here
+            const updatedData = handleIzracunaj(resData); // Update data here
             setDataSource(updatedData); // Set updated data to state
         } catch (error) {
             console.log(error);
@@ -29,7 +29,24 @@ const UkupnaEvidencija = () => {
         fetchData();
     }, []);
 
+    const handleIzracunaj = (data) => {
+        return data.map(artikl => {
+            const evidencijaStanja = parseFloat(artikl.kupljenaKolicina || 0) - parseFloat(artikl.prodajnaKolicina || 0);
+            const razlika = parseFloat(artikl.evidencijaRobe || 0) - evidencijaStanja;
 
+            return {
+                ...artikl,
+                evidencijaStanja: evidencijaStanja,
+                razlika: razlika
+            };
+        });
+    };
+
+    const handleFilter = () => {
+        // Example filter function
+        const filteredData = dataSource.filter(artikl => artikl.razlika > 0);
+        setDataSource(filteredData);
+    };
 
     // Table columns definition
     const columns = [
@@ -47,15 +64,19 @@ const UkupnaEvidencija = () => {
         },
         {
             title: "Evidencija robe (l/kg)",
-            dataIndex: "razlika",
-            key: "razlika",
+            dataIndex: "evidencijaRobe",
+            key: "evidencijaRobe",
             align: "center",
         },
         {
             title: "Razlika (l/kg)",
-            dataIndex: "evidencijaRobe",
-            key: "evidencijaRobe",
+            dataIndex: "razlika",
+            key: "razlika",
             align: "center",
+            render: (record) => {
+                const style = { color: record < 0 ? 'red' : record > 0 ? '#0f0cde' : 'inherit' };
+                return <strong><span style={style}>{record}</span></strong>;
+            }
         },
         {
             title: "Ukupno prodano (l/kg)",
@@ -77,6 +98,9 @@ const UkupnaEvidencija = () => {
                 <div style={{ marginTop: "-10px" }}>
                     <h1 style={{ textAlign: "center", color: "white", marginTop: "-10px" }}>Ukupna evidencija</h1>
                 </div>
+            </div>
+            <div style={{ margin: '10px' }}>
+                <Button onClick={handleFilter}>Filtriraj</Button>
             </div>
             <Spin spinning={loading}>
                 <div style={{ display: "flex", flexDirection: "row", margin: "10px", marginLeft: "10px" }}>

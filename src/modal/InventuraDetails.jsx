@@ -19,16 +19,18 @@ const InventuraDetails = (props) => {
                 console.error("Failed to fetch artikli:", error);
             }
         };
-
+        console.log(artikliStorage);
         fetchArtikli();
+    }, []);
+
+    useEffect(() => {
         setIsModalOpen(props.isOpen);
         setArtikliStorage(props.storageItem?.artikli || []);
     }, [props.isOpen, props.storageItem]);
 
     const handleSaveUpdate = async () => {
-            // Validate all kolicina values before proceeding with the save
+        // Validate all kolicina values before proceeding with the save
         for (const item of artikliStorage) {
-            // Ensure kolicina is treated as a string
             const kolicinaValue = String(item.kolicina);
             if (kolicinaValue.trim() === "" || parseFloat(kolicinaValue) <= 0) {
                 notification.warning({
@@ -36,27 +38,33 @@ const InventuraDetails = (props) => {
                     description: 'Sva količina polja moraju biti veća od 0.',
                     placement: 'topRight'
                 });
-                return; // Stop the save process if validation fails
+                return;
             }
-    }
+        }
+
         try {
             const updatedStorage = {
                 date: props.storageItem.date,
                 artikli: artikliStorage
             };
 
+            console.log("Updated Storage:", updatedStorage);
+
             const updatedArtikl = artikli.map(artikl => {
                 const foundArtikl = artikliStorage.find(a => a.nazivArtikla === artikl.naziv);
                 if (foundArtikl) {
                     return {
                         ...artikl,
-                        evidencijaRobe: parseFloat(foundArtikl.kolicina) // Replace previous quantity with new one
+                        evidencijaRobe: parseFloat(foundArtikl.kolicina)
                     };
                 }
                 return artikl;
             });
 
             await InventuraService.editInventura(props.storageItem.id, updatedStorage);
+
+            console.log("Updated Artikli:", updatedArtikl);
+
             await Promise.all(updatedArtikl.map(async (artikl) => {
                 await ArtikliService.editArtikl(artikl.id, artikl);
             }));
@@ -91,14 +99,7 @@ const InventuraDetails = (props) => {
 
     const handleArtiklChange = (index, key, value) => {
         const updatedArtikli = [...artikliStorage];
-
-        // Replace the previous input for 'kolicina' with the new value
-        if (key === 'kolicina') {
-            updatedArtikli[index][key] = value; // Replace previous input
-        } else {
-            updatedArtikli[index][key] = value; // For other fields, keep existing logic
-        }
-
+        updatedArtikli[index][key] = value;
         setArtikliStorage(updatedArtikli);
     };
 
@@ -133,9 +134,6 @@ const InventuraDetails = (props) => {
                                 <tr key={index}>
                                     {isChecked ? (
                                         <>
-                                            {/* <td style={{ border: '1px solid black', padding: '8px' }}>
-                                                <Input value={a.nazivArtikla} onChange={(e) => handleArtiklChange(index, 'nazivArtikla', e.target.value)} />
-                                            </td> */}
                                             <td style={{ border: '1px solid black', padding: '8px' }}>{a.nazivArtikla}</td>
                                             <td style={{ border: '1px solid black', padding: '8px', textAlign: "center" }}>
                                                 <Input value={a.kolicina} onChange={(e) => handleArtiklChange(index, 'kolicina', e.target.value)} />
@@ -159,5 +157,6 @@ const InventuraDetails = (props) => {
             </Form>
         </Modal>
     );
-}
+};
+
 export default InventuraDetails;

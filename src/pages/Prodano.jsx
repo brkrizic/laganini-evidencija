@@ -174,7 +174,7 @@ const Prodano = () => {
             if (foundArtikl) {
                 return {
                     ...artikl,
-                    kupljenaKolicina: parseFloat(artikl.kupljenaKolicina) - parseFloat(foundArtikl.kolicina)
+                    prodajnaKolicina: parseFloat(artikl.prodajnaKolicina) - parseFloat(foundArtikl.kolicina)
                 };
             }
             return artikl;

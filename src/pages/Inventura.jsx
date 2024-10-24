@@ -72,7 +72,7 @@ const Inventura = () => {
             if (foundArtikl) {
                 return {
                     ...artikl,
-                    evidencijaRobe: parseFloat(artikl.razlika) + parseFloat(foundArtikl.kolicina),
+                    evidencijaRobe: parseFloat(artikl.evidencijaRobe) + parseFloat(foundArtikl.kolicina),
                 };
             }
             return artikl;
@@ -187,7 +187,7 @@ const Inventura = () => {
             if(foundArtikl){
                 return {
                     ...artikl,
-                    kupljenaKolicina: parseFloat(artikl.kupljenaKolicina) - parseFloat(foundArtikl.kolicina)
+                    evidencijaRobe: parseFloat(artikl.evidencijaRobe) - parseFloat(foundArtikl.kolicina)
                 };
             }
             return artikl;

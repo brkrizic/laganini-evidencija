@@ -33,7 +33,7 @@ export const InventuraService = {
     },
     editInventura: async (id, params) => {
         try {
-            const response = await axios.put(`${baseUrl}/api/otpremnice/${id}`, params, {headers});
+            const response = await axios.put(`${baseUrl}/api/inventure/${id}`, params, {headers});
             console.log(response);
             return response;
         } catch (error) {
