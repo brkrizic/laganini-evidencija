@@ -56,7 +56,7 @@ const InventuraDetails = (props) => {
                 return artikl;
             });
 
-            await InventuraService.editOtpremnica(props.storageItem.id, updatedStorage);
+            await InventuraService.editInventura(props.storageItem.id, updatedStorage);
             await Promise.all(updatedArtikl.map(async (artikl) => {
                 await ArtikliService.editArtikl(artikl.id, artikl);
             }));

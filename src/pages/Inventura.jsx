@@ -1,38 +1,37 @@
 import { Button, Input, Modal, Select, DatePicker, notification, Spin } from "antd";
 import React, { useEffect, useState } from "react";
 import { v4 as uuidv4 } from 'uuid';
-import InventuraDetails from "../modal/InventuraDetails"; // Update the modal import
+import InventuraDetails from "../modal/InventuraDetails";
 import customParseFormat from 'dayjs/plugin/customParseFormat';
 import dayjs from 'dayjs';
 import { DeleteOutlined, LoadingOutlined } from "@ant-design/icons";
 import DeleteModal from "../modal/DeleteModal";
 import { ArtikliService } from "../api/ArtikliService";
-import { InventuraService } from "../api/InventuraService"; // Change to InventuraService
+import { InventuraService } from "../api/InventuraService";
 import { formatDateForDisplay, formatDateForServer } from "../convert/dateConverter";
-
 dayjs.extend(customParseFormat);
 
 const { Option } = Select;
 
 const Inventura = () => {
     const [artikli, setArtikli] = useState([]);
-    const [nazivInventure, setNazivInventure] = useState(""); // Rename to nazivInventure
+    const [nazivInventura, setNazivInventure] = useState("");
     const [nazivArtikla, setNazivArtikla] = useState("");
     const [postojeciArtikli, setPostojeciArtikli] = useState([]);
-    const [iznosInventure, setIznosInventure] = useState(""); // Rename to iznosInventure
+    const [iznosInventure, setIznosInventure] = useState("");
     const [visibleModal, setVisibleModal] = useState(false);
     const [visibleArtiklModal, setVisibleArtiklModal] = useState(false);
-    const [inventure, setInventure] = useState([]); // Rename to inventure
+    const [inventure, setInventure] = useState([]);
     const [arrObjArtikl, setArrObjArtikl] = useState([]);
     const [modalOpen, setModalOpen] = useState(false);
-    const [selectedInventura, setSelectedInventura] = useState(null); // Rename to selectedInventura
+    const [selectedInventura, setSelectedInventura] = useState(null);
     const [datum, setDatum] = useState(dayjs('01/01/2024', 'DD/MM/YYYY'));
     const [deleteModal, setDeleteModal] = useState(false);
     const [keyToDelete, setKeyToDelete] = useState(null);
     const [loadingFetch, setLoadingFetch] = useState(false);
     const [loadingSave, setLoadingSave] = useState(false);
     const [loadingDelete, setLoadingDelete] = useState(false);
-    const [idObjInventura, setIdObjInventura] = useState(); // Rename to idObjInventura
+    const [idObjInventura, setIdObjInventura] = useState();
 
     useEffect(() => {
         const fetchData = async () => {
@@ -44,7 +43,7 @@ const Inventura = () => {
                 const artikliNaziv = artikliData.map((artikl) => artikl.naziv);
                 setPostojeciArtikli(artikliNaziv);
 
-                const resInventure = await InventuraService.getAllInventure(); // Change to InventuraService
+                const resInventure = await InventuraService.getAllInventure();
                 const inventureData = resInventure.data;
                 setInventure(inventureData);
             } catch (error) {
@@ -73,7 +72,7 @@ const Inventura = () => {
             if (foundArtikl) {
                 return {
                     ...artikl,
-                    evidencijaRobe: parseFloat(artikl.evidencijaRobe) + parseFloat(foundArtikl.kolicina), // Use evidencijaRobe
+                    evidencijaRobe: parseFloat(artikl.razlika) + parseFloat(foundArtikl.kolicina),
                 };
             }
             return artikl;
@@ -95,12 +94,12 @@ const Inventura = () => {
     const handleSaveArtikl = () => {
         const objArtikl = {
             nazivArtikla: nazivArtikla,
-            kolicina: iznosInventure // Use iznosInventure
+            kolicina: iznosInventure
         };
 
         setArrObjArtikl((prev) => [...prev, objArtikl]);
         setNazivArtikla("");
-        setIznosInventure(""); // Use iznosInventure
+        setIznosInventure("");
     };
 
     const handleOk = async () => {
@@ -116,10 +115,10 @@ const Inventura = () => {
         };
 
         try {
-            await InventuraService.saveInventura(inventuraObj); // Change to InventuraService
+            await InventuraService.saveInventura(inventuraObj);
             await updateArtiklStorage(arrObjArtikl);
 
-            const res = await InventuraService.getAllInventure(); // Change to InventuraService
+            const res = await InventuraService.getAllInventure();
             setInventure(res.data);
 
             setVisibleArtiklModal(false);
@@ -133,14 +132,14 @@ const Inventura = () => {
         }
 
         notification.success({
-            message: "Inventura uspješno pohranjena!", // Update message
+            message: "Inventura uspješno pohranjena!",
             placement: "topRight"
         });
     };
 
     const handleOpenModalDetails = (inventura) => {
         setModalOpen(true);
-        setSelectedInventura(inventura); // Change to setSelectedInventura
+        setSelectedInventura(inventura);
     };
 
     const handleDatum = (date) => {
@@ -150,13 +149,13 @@ const Inventura = () => {
     const handleDelete = (key) => {
         setDeleteModal(true);
         setKeyToDelete(key);
-        setIdObjInventura(key); // Change to setIdObjInventura
+        setIdObjInventura(key);
     };
 
     const deleteItem = async (id) => {
         setLoadingDelete(true);
         try {
-            await InventuraService.deleteInventura(id); // Change to InventuraService
+            await InventuraService.deleteInventura(id);
             await updateDeletionArtiklStorage(id);
         } catch (error) {
             console.log(error);
@@ -166,29 +165,29 @@ const Inventura = () => {
 
         setDeleteModal(false);
         notification.success({
-            message: "Inventura uspješno izbrisana!", // Update message
+            message: "Inventura uspješno izbrisana!",
             placement: "topRight"
         });
 
-        const res = await InventuraService.getAllInventure(); // Change to InventuraService
+        const res = await InventuraService.getAllInventure();
         setInventure(res.data);
     };
 
     const handleCount = (id) => {
-        const inventura = inventure.find(o => o.id === id); // Change to inventura
+        const inventura = inventure.find(o => o.id === id);
         return inventura ? inventura.artikli.length : 0;
     }
 
     const updateDeletionArtiklStorage = async (id) => {
-        const inventura = inventure.find(o => o.id === id); // Change to inventura
-        if (!inventura) return;
+        const inventura = inventure.find(o => o.id === id);
+        if(!inventura) return;
 
         const updatedArtikl = artikli.map(artikl => {
-            const foundArtikl = inventura.artikli.find(a => a.nazivArtikla === artikl.naziv); // Change to inventura
-            if (foundArtikl) {
+            const foundArtikl = inventura.artikli.find(a => a.nazivArtikla === artikl.naziv);
+            if(foundArtikl){
                 return {
                     ...artikl,
-                    evidencijaRobe: parseFloat(artikl.evidencijaRobe) + parseFloat(foundArtikl.kolicina) // Adjust to reflect deletion
+                    kupljenaKolicina: parseFloat(artikl.kupljenaKolicina) - parseFloat(foundArtikl.kolicina)
                 };
             }
             return artikl;
@@ -208,12 +207,12 @@ const Inventura = () => {
     };
 
     const handleSelectInventura = (id) => {
-        setIdObjInventura(id); // Change to setIdObjInventura
+        setIdObjInventura(id);
     }
 
     const handleOnClose = async () => {
         setModalOpen(false);
-        const res = await InventuraService.getAllInventure(); // Change to InventuraService
+        const res = await InventuraService.getAllInventure();
         const resData = res.data;
         setInventure(resData);
     }
@@ -222,12 +221,12 @@ const Inventura = () => {
         <>
             <div style={{ backgroundColor: "#0063a6", height: "50px", width: "100%" }}>
                 <div style={{ marginTop: "-10px" }}>
-                    <h1 style={{ textAlign: "center", color: "white", marginTop: "0px" }}>Inventura</h1> {/* Update header */}
+                    <h1 style={{ textAlign: "center", color: "white", marginTop: "0px" }}>Inventure</h1>
                 </div>
             </div>
             <div style={{ margin: "10px" }}>
                 <Button onClick={handleOpenModal} type="primary">
-                    Nova inventura {/* Update button label */}
+                    Nova Inventura
                 </Button>
             </div>
             <div>
@@ -261,7 +260,7 @@ const Inventura = () => {
                                 ))}
                             </Select>
                             <label>Količina</label>
-                            <Input value={iznosInventure} onChange={(e) => setIznosInventure(e.target.value)} /> {/* Update to iznosInventure */}
+                            <Input value={iznosInventure} onChange={(e) => setIznosInventure(e.target.value)} />
                             <Button onClick={handleSaveArtikl}>Dodaj Artikl</Button>
                             <ul>
                                 {arrObjArtikl.map((artikl, idx) => (
@@ -271,22 +270,22 @@ const Inventura = () => {
                         </div>
                         <Button type="primary" onClick={handleOk}>
                             {loadingSave ? 
-                                <div style={{ backgroundColor: "black" }}>
+                                <div style={{ backgroundColor: "black"}}>
                                     <Spin />
-                                </div> : "Spremi Inventuru"} {/* Update button label */}
+                                </div> : "Spremi Otpremnicu"}
                         </Button>
                     </Modal>
                 )}
                 <Spin spinning={loadingFetch}>
-                    <div style={{ marginLeft: "0px", marginRight: "0px", width: "100%" }}>
+                    <div style={{ marginLeft: "0px", marginRight: "0px", width: "100%"}}>
                         <ul style={{ listStyleType: "none", display: "flex", flexWrap: "wrap", padding: 0 }}>
-                            {inventure.map((o) => ( // Change to inventure
+                            {inventure.map((o) => (
                                 <div key={o.id}>
                                     <Button
                                         style={{ height: "160px", width: "160px", margin: "10px" }}
                                         onClick={() => {
                                             handleOpenModalDetails(o);
-                                            handleSelectInventura(o.id); // Change to handleSelectInventura
+                                            handleSelectInventura(o.id);
                                         }}
                                     >
                                         <li>
@@ -297,7 +296,7 @@ const Inventura = () => {
                                     <div style={{ display: "flex", flexDirection: "column", margin: "10px", marginTop: "-10px" }}>
                                         <button 
                                             onClick={() => handleDelete(o.id)}
-                                            style={{ color: "red" }}
+                                            style={{ color: "red"}}
                                         >
                                             <DeleteOutlined />
                                         </button>
@@ -310,23 +309,23 @@ const Inventura = () => {
                 {deleteModal && (
                     <DeleteModal
                         isOpen={deleteModal}
-                        title={"inventuru"} // Update modal title
+                        title={"otpremnicu"}
                         handleDelete={() => deleteItem(keyToDelete)}
                         onClose={() => setDeleteModal(false)}
                         loading={loadingDelete}
                     />
                 )}
-                <InventuraDetails // Change to InventuraDetails
+                <InventuraDetails
                     isOpen={modalOpen}
                     onClose={() => handleOnClose()}
-                    storageItem={selectedInventura} // Change to selectedInventura
-                    title={"Inventura"} // Update title
-                    id={idObjInventura} // Change to idObjInventura
-                    storage={inventure} // Change to inventure
+                    storageItem={selectedInventura}
+                    title={"inventura"}
+                    id={idObjInventura}
+                    storage={inventure}
                 />
             </div>
         </>
     );
 };
 
-export default Inventura; // Update export
+export default Inventura;
