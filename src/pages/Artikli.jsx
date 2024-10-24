@@ -109,7 +109,7 @@ const Artikli = () => {
     }
 
     return (
-        <div>
+        <div style={{ width: '100%'}}>
             <div style={{ backgroundColor: "#0063a6", height: "50px", width: "100%"}}>
                 <div style={{ marginTop: "-10px"}}>
                     <h1 style={{ textAlign: "center", color: "white", marginTop: "-10px"}}>Artikli</h1>

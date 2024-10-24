@@ -1,11 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { Table, Spin, notification, Button } from "antd";
+import { Table, Spin, notification, Button, Dropdown, Menu, Input, Slider } from "antd";
 import "./styles/stylesTable.css";
 import { ArtikliService } from "../api/ArtikliService";
 
 const UkupnaEvidencija = () => {
     const [dataSource, setDataSource] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [visible, setVisible] = useState(false);
+
+    //Filter
+    const [naziv, setNaziv] = useState('');
+    const [filteredData, setFilteredData] = useState([]);
+    const [evidencijaStanja, setEvidencijaStanja] = useState('');
+    const [evidencijaRobe, setEvidencijaRobe] = useState();
+    const [razlika, setRazlika] = useState('');
+    const [ukupnoProdano, setUkupnoProdano] = useState('');
+    const [ukupnoKupljeno, setUkupnoKupljeno] = useState('');
 
     const fetchData = async () => {
         setLoading(true); // Start loading
@@ -14,6 +24,7 @@ const UkupnaEvidencija = () => {
             const resData = res.data;
             const updatedData = handleIzracunaj(resData); // Update data here
             setDataSource(updatedData); // Set updated data to state
+            setFilteredData(updatedData);
         } catch (error) {
             console.log(error);
             notification.error({
@@ -42,12 +53,6 @@ const UkupnaEvidencija = () => {
         });
     };
 
-    const handleFilter = () => {
-        // Example filter function
-        const filteredData = dataSource.filter(artikl => artikl.razlika > 0);
-        setDataSource(filteredData);
-    };
-
     // Table columns definition
     const columns = [
         {
@@ -57,19 +62,19 @@ const UkupnaEvidencija = () => {
             className: "mainColumn",
         },
         {
-            title: "Evidencija stanja (l/kg)",
+            title: "Evidencija stanja (l/kg/kom)",
             dataIndex: "evidencijaStanja",
             key: "evidencijaStanja",
             align: "center",
         },
         {
-            title: "Evidencija robe (l/kg)",
+            title: "Evidencija robe (l/kg/kom)",
             dataIndex: "evidencijaRobe",
             key: "evidencijaRobe",
             align: "center",
         },
         {
-            title: "Razlika (l/kg)",
+            title: "Razlika (l/kg/kom)",
             dataIndex: "razlika",
             key: "razlika",
             align: "center",
@@ -79,19 +84,66 @@ const UkupnaEvidencija = () => {
             }
         },
         {
-            title: "Ukupno prodano (l/kg)",
+            title: "Ukupno prodano (l/kg/kom)",
             dataIndex: "prodajnaKolicina",
             key: "prodajnaKolicina",
             align: "center",
         },
         {
-            title: "Ukupno kupljeno (l/kg)",
+            title: "Ukupno kupljeno (l/kg/kom)",
             dataIndex: "kupljenaKolicina",
             key: "kupljenaKolicina",
             align: "center",
         },
     ];
 
+
+    useEffect(() => {
+        console.log(naziv);
+    }, [naziv]);
+
+    const handleFilter = () => {
+        const newFilteredData = dataSource.filter(item =>
+            item.naziv.toLowerCase().includes(naziv.toLowerCase())
+        );
+        setFilteredData(newFilteredData);
+        setVisible(false);
+    };
+
+    const resetFilter = () => {
+        setFilteredData(dataSource);
+        setNaziv('');
+    }
+
+
+    const filterData = (
+        <Menu>
+            <div style={{ margin: '10px'}}>
+                <Menu.Item>
+                    <div style={{ marginRight: '5px'}}>
+                        <label>Naziv:</label>
+                    </div>
+                <Input value={naziv} onChange={(e) => setNaziv(e.target.value)}></Input>
+            </Menu.Item>
+            </div>
+            {/* <div style={{ margin: '10px'}}>
+                <Menu.Item>
+                    <div style={{ marginRight: '5px'}}>
+                        <label>Razlika:</label>
+                    </div>
+                <Input value={razlika} onChange={(e) => setRazlika(e.target.value)}></Input>
+            </Menu.Item>
+            </div> */}
+            <div style={{ textAlign: 'right', margin: '10px', marginTop: '35px'}}>
+                <Button type="default" onClick={() => resetFilter()}>Resetiraj</Button>
+                <Button type="primary" onClick={() => handleFilter()}>Filtriraj</Button>
+            </div>
+        </Menu>
+    )
+
+    const handleVisibleChange = (flag) => {
+        setVisible(flag)
+    }
     return (
         <div>
             <div style={{ backgroundColor: "#0063a6", height: "50px", width: "100%" }}>
@@ -100,13 +152,21 @@ const UkupnaEvidencija = () => {
                 </div>
             </div>
             <div style={{ margin: '10px' }}>
-                <Button onClick={handleFilter}>Filtriraj</Button>
+            <Dropdown
+                overlay={filterData}
+                trigger={['click']}
+                onVisibleChange={handleVisibleChange}
+                visible={visible}
+            >
+
+                <Button>Filtriraj</Button>
+            </Dropdown>
             </div>
             <Spin spinning={loading}>
                 <div style={{ display: "flex", flexDirection: "row", margin: "10px", marginLeft: "10px" }}>
                     <Table
                         columns={columns}
-                        dataSource={dataSource}
+                        dataSource={filteredData}
                         rowKey="id"  // assuming each item has a unique 'id'
                         style={{ width: "100%", textAlign: "center" }}
                     />

@@ -1,16 +1,17 @@
 import React from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HashRouter, Routes, Route } from "react-router-dom";
 import UkupnaEvidencija from "./pages/UkupnaEvidencija";
 import Otpremnice from "./pages/Otpremnice";
 import Prodano from "./pages/Prodano";
 import Inventura from "./pages/Inventura";
 import Header from "./header/Header";
 import Artikli from "./pages/Artikli";
+import Konverzacija from "./pages/Konverzacija";
 
 
 function App() {
   return (
-    <BrowserRouter>
+    <HashRouter>
     <Header/>
       <Routes>
         <Route path="/">
@@ -19,9 +20,10 @@ function App() {
           <Route path="Prodano" element={<Prodano/>}></Route>
           <Route path="Inventura" element={<Inventura/>}></Route>
           <Route path="Artikli" element={<Artikli/>}></Route>
+          <Route path="Konverzacija" element={<Konverzacija/>}></Route>
         </Route>
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
 

@@ -126,7 +126,7 @@ const InventuraDetails = (props) => {
                         <thead>
                             <tr>
                                 <th style={{ border: '1px solid black', padding: '8px' }}>Naziv artikla</th>
-                                <th style={{ border: '1px solid black', padding: '8px' }}>Kolicina</th>
+                                <th style={{ border: '1px solid black', padding: '8px' }}>Količina</th>
                             </tr>
                         </thead>
                         <tbody>
