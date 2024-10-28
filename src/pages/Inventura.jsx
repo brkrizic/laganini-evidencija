@@ -9,6 +9,7 @@ import DeleteModal from "../modal/DeleteModal";
 import { ArtikliService } from "../api/ArtikliService";
 import { InventuraService } from "../api/InventuraService";
 import { formatDateForDisplay, formatDateForServer } from "../convert/dateConverter";
+import { useBaseUrl } from "../contexts/BaseUrlContext";
 dayjs.extend(customParseFormat);
 
 const { Option } = Select;
@@ -33,17 +34,19 @@ const Inventura = () => {
     const [loadingDelete, setLoadingDelete] = useState(false);
     const [idObjInventura, setIdObjInventura] = useState();
 
+    const { baseUrl } = useBaseUrl();
+
     useEffect(() => {
         const fetchData = async () => {
             setLoadingFetch(true);
             try {
-                const resArtikli = await ArtikliService.getAllArtikli();
+                const resArtikli = await ArtikliService.getAllArtikli(baseUrl);
                 const artikliData = resArtikli.data;
                 setArtikli(artikliData);
                 const artikliNaziv = artikliData.map((artikl) => artikl.naziv);
                 setPostojeciArtikli(artikliNaziv);
 
-                const resInventure = await InventuraService.getAllInventure();
+                const resInventure = await InventuraService.getAllInventure(baseUrl);
                 const inventureData = resInventure.data;
                 setInventure(inventureData);
             } catch (error) {
@@ -81,7 +84,7 @@ const Inventura = () => {
         try {
             await Promise.all(
                 updatedArtikl.map(async (artikl) => {
-                    await ArtikliService.editArtikl(artikl.id, artikl);
+                    await ArtikliService.editArtikl(baseUrl, artikl.id, artikl);
                 })
             );
         } catch (error) {
@@ -115,10 +118,10 @@ const Inventura = () => {
         };
 
         try {
-            await InventuraService.saveInventura(inventuraObj);
+            await InventuraService.saveInventura(baseUrl, inventuraObj);
             await updateArtiklStorage(arrObjArtikl);
 
-            const res = await InventuraService.getAllInventure();
+            const res = await InventuraService.getAllInventure(baseUrl);
             setInventure(res.data);
 
             setVisibleArtiklModal(false);
@@ -155,7 +158,7 @@ const Inventura = () => {
     const deleteItem = async (id) => {
         setLoadingDelete(true);
         try {
-            await InventuraService.deleteInventura(id);
+            await InventuraService.deleteInventura(baseUrl, id);
             await updateDeletionArtiklStorage(id);
         } catch (error) {
             console.log(error);
@@ -169,7 +172,7 @@ const Inventura = () => {
             placement: "topRight"
         });
 
-        const res = await InventuraService.getAllInventure();
+        const res = await InventuraService.getAllInventure(baseUrl);
         setInventure(res.data);
     };
 
@@ -196,7 +199,7 @@ const Inventura = () => {
         try {
             await Promise.all(
                 updatedArtikl.map(async (artikl) => {
-                    await ArtikliService.editArtikl(artikl.id, artikl);
+                    await ArtikliService.editArtikl(baseUrl, artikl.id, artikl);
                     console.log("Artikl updated: ", artikl);
                 })
             );
@@ -212,7 +215,7 @@ const Inventura = () => {
 
     const handleOnClose = async () => {
         setModalOpen(false);
-        const res = await InventuraService.getAllInventure();
+        const res = await InventuraService.getAllInventure(baseUrl);
         const resData = res.data;
         setInventure(resData);
     }

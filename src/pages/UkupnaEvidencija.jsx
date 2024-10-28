@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Table, Spin, notification, Button, Dropdown, Menu, Input, Slider } from "antd";
 import "./styles/stylesTable.css";
 import { ArtikliService } from "../api/ArtikliService";
+import { baseUrl } from "../url/baseUrl";
+import { useBaseUrl } from "../contexts/BaseUrlContext";
 
 const UkupnaEvidencija = () => {
     const [dataSource, setDataSource] = useState([]);
@@ -17,10 +19,12 @@ const UkupnaEvidencija = () => {
     const [ukupnoProdano, setUkupnoProdano] = useState('');
     const [ukupnoKupljeno, setUkupnoKupljeno] = useState('');
 
+    const { baseUrl } = useBaseUrl();
+
     const fetchData = async () => {
         setLoading(true); // Start loading
         try {
-            const res = await ArtikliService.getAllArtikli();
+            const res = await ArtikliService.getAllArtikli(baseUrl);
             const resData = res.data;
             const updatedData = handleIzracunaj(resData); // Update data here
             setDataSource(updatedData); // Set updated data to state

@@ -4,7 +4,7 @@ import headers from "../url/headers";
 import axios from "axios";
 
 export const InventuraService = {
-    getAllInventure: async () => {
+    getAllInventure: async (baseUrl) => {
         try {
             const response = await axios.get(`${baseUrl}/api/inventure`, {headers});
             console.log(response);
@@ -13,7 +13,7 @@ export const InventuraService = {
             console.log(error);
         }
     },
-    saveInventura: async (params) => {
+    saveInventura: async (baseUrl, params) => {
         try {
             const response = await axios.post(`${baseUrl}/api/inventure`, params, {headers});
             console.log(response);
@@ -22,7 +22,7 @@ export const InventuraService = {
             console.log(error);
         }
     },
-    deleteInventura: async (id) => {
+    deleteInventura: async (baseUrl, id) => {
         try {
             const response = await axios.delete(`${baseUrl}/api/inventure/${id}`, {headers});
             console.log(response);
@@ -31,7 +31,7 @@ export const InventuraService = {
             console.log(error);
         }
     },
-    editInventura: async (id, params) => {
+    editInventura: async (baseUrl, id, params) => {
         try {
             const response = await axios.put(`${baseUrl}/api/inventure/${id}`, params, {headers});
             console.log(response);

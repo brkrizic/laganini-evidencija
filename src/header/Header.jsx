@@ -28,9 +28,13 @@ const Header = () => {
         name: "Artikli",
         path: "/artikli"
     },
-        {
+    {
         name: "Konverzacija",
         path: "/konverzacija"
+    },
+    {
+        name: "Postavke",
+        path: "/postavke"
     }
 ]
 

@@ -4,7 +4,7 @@ import headers from "../url/headers";
 import axios from "axios";
 
 export const OtpremniceService = {
-    getAllOtpremnice: async () => {
+    getAllOtpremnice: async (baseUrl) => {
         try {
             const response = await axios.get(`${baseUrl}/api/otpremnice`, {headers});
             console.log(response);
@@ -13,7 +13,7 @@ export const OtpremniceService = {
             console.log(error);
         }
     },
-    saveOtpremnica: async (params) => {
+    saveOtpremnica: async (baseUrl, params) => {
         try {
             const response = await axios.post(`${baseUrl}/api/otpremnice`, params, {headers});
             console.log(response);
@@ -22,7 +22,7 @@ export const OtpremniceService = {
             console.log(error);
         }
     },
-    deleteOtpremnica: async (id) => {
+    deleteOtpremnica: async (baseUrl, id) => {
         try {
             const response = await axios.delete(`${baseUrl}/api/otpremnice/${id}`, {headers});
             console.log(response);
@@ -31,7 +31,7 @@ export const OtpremniceService = {
             console.log(error);
         }
     },
-    editOtpremnica: async (id, params) => {
+    editOtpremnica: async (baseUrl, id, params) => {
         try {
             const response = await axios.put(`${baseUrl}/api/otpremnice/${id}`, params, {headers});
             console.log(response);

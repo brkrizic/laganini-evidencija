@@ -4,6 +4,7 @@ import { DeleteOutlined } from "@ant-design/icons";
 import { ArtikliService } from "../api/ArtikliService";
 import DeleteModal from "../modal/DeleteModal";
 import { Input, Spin, notification } from "antd";
+import { useBaseUrl } from "../contexts/BaseUrlContext";
 
 const Artikli = () => {
     const [nazivArtikl, setNazivArtikl] = useState("");
@@ -15,11 +16,13 @@ const Artikli = () => {
     const [loadingDelete, setLoadingDelete] = useState(false);
     const [searchArtikl, setSearchArtikl] = useState("");
 
+    const { baseUrl } = useBaseUrl();
+
     useEffect(() => {
         const fetchApi = async () => {
             setLoadingFetch(true);
             try {
-                const response = await ArtikliService.getAllArtikli();
+                const response = await ArtikliService.getAllArtikli(baseUrl);
                 setArtikli(response.data);
             } catch (error) {
                 console.error("Error:", error.message);
@@ -51,8 +54,8 @@ const Artikli = () => {
 
         setLoadingSave(true);
         try {
-            await ArtikliService.saveArtikl(artikliObj);
-            const response = await ArtikliService.getAllArtikli();
+            await ArtikliService.saveArtikl(baseUrl, artikliObj);
+            const response = await ArtikliService.getAllArtikli(baseUrl);
             setArtikli(response.data);
             setNazivArtikl("");
 
@@ -76,8 +79,8 @@ const Artikli = () => {
     const handleDelete = async (key) => {
         setLoadingDelete(true);
         try {
-            await ArtikliService.deleteArtikl(key);
-            const res = await ArtikliService.getAllArtikli(); // Fetch updated list
+            await ArtikliService.deleteArtikl(baseUrl, key);
+            const res = await ArtikliService.getAllArtikli(baseUrl); // Fetch updated list
             setArtikli(res.data);
             setDeleteModal(false);
 

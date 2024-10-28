@@ -9,6 +9,7 @@ import DeleteModal from "../modal/DeleteModal";
 import { ArtikliService } from "../api/ArtikliService";
 import { OtpremniceService } from "../api/OtpremniceService";
 import { formatDateForDisplay, formatDateForServer } from "../convert/dateConverter";
+import { useBaseUrl } from "../contexts/BaseUrlContext";
 dayjs.extend(customParseFormat);
 
 const { Option } = Select;
@@ -33,17 +34,19 @@ const Otpremnice = () => {
     const [loadingDelete, setLoadingDelete] = useState(false);
     const [idObjOtpremnica, setIdObjOtpremnica] = useState();
 
+    const { baseUrl } = useBaseUrl();
+
     useEffect(() => {
         const fetchData = async () => {
             setLoadingFetch(true);
             try {
-                const resArtikli = await ArtikliService.getAllArtikli();
+                const resArtikli = await ArtikliService.getAllArtikli(baseUrl);
                 const artikliData = resArtikli.data;
                 setArtikli(artikliData);
                 const artikliNaziv = artikliData.map((artikl) => artikl.naziv);
                 setPostojeciArtikli(artikliNaziv);
 
-                const resOtpremnice = await OtpremniceService.getAllOtpremnice();
+                const resOtpremnice = await OtpremniceService.getAllOtpremnice(baseUrl);
                 const otpremniceData = resOtpremnice.data;
                 setOtpremnice(otpremniceData);
             } catch (error) {
@@ -118,7 +121,7 @@ const Otpremnice = () => {
             await OtpremniceService.saveOtpremnica(otpremnicaObj);
             await updateArtiklStorage(arrObjArtikl);
 
-            const res = await OtpremniceService.getAllOtpremnice();
+            const res = await OtpremniceService.getAllOtpremnice(baseUrl);
             setOtpremnice(res.data);
 
             setVisibleArtiklModal(false);
@@ -155,7 +158,7 @@ const Otpremnice = () => {
     const deleteItem = async (id) => {
         setLoadingDelete(true);
         try {
-            await OtpremniceService.deleteOtpremnica(id);
+            await OtpremniceService.deleteOtpremnica(baseUrl, id);
             await updateDeletionArtiklStorage(id);
         } catch (error) {
             console.log(error);
@@ -169,7 +172,7 @@ const Otpremnice = () => {
             placement: "topRight"
         });
 
-        const res = await OtpremniceService.getAllOtpremnice();
+        const res = await OtpremniceService.getAllOtpremnice(baseUrl);
         setOtpremnice(res.data);
     };
 
@@ -212,7 +215,7 @@ const Otpremnice = () => {
 
     const handleOnClose = async () => {
         setModalOpen(false);
-        const res = await OtpremniceService.getAllOtpremnice();
+        const res = await OtpremniceService.getAllOtpremnice(baseUrl);
         const resData = res.data;
         setOtpremnice(resData);
     }
