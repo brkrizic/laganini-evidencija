@@ -9,6 +9,7 @@ import DeleteModal from "../modal/DeleteModal";
 import { ArtikliService } from "../api/ArtikliService";
 import { ProdanoService } from "../api/ProdanoService";
 import { formatDateForDisplay, formatDateForServer } from "../convert/dateConverter";
+import { useBaseUrl } from "../contexts/BaseUrlContext";
 dayjs.extend(customParseFormat);
 
 const { Option } = Select;
@@ -32,16 +33,18 @@ const Prodano = () => {
     const [loadingDelete, setLoadingDelete] = useState(false);
     const [idObjProdano, setIdObjProdano] = useState();
 
+    const { baseUrl } = useBaseUrl();
+    
     useEffect(() => {
         const fetchData = async () => {
             setLoadingFetch(true);
             try {
-                const resArtikli = await ArtikliService.getAllArtikli();
+                const resArtikli = await ArtikliService.getAllArtikli(baseUrl);
                 const artikliData = resArtikli.data;
                 setArtikli(artikliData);
                 setPostojeciArtikli(artikliData.map((artikl) => artikl.naziv));
 
-                const resProdano = await ProdanoService.getAllProdano();
+                const resProdano = await ProdanoService.getAllProdano(baseUrl);
                 setProdano(resProdano.data);
             } catch (error) {
                 console.error("Error fetching data:", error);
@@ -90,10 +93,10 @@ const Prodano = () => {
         };
 
         try {
-            await ProdanoService.saveProdano(prodanoObj);
+            await ProdanoService.saveProdano(baseUrl, prodanoObj);
             await updateArtiklStorage(arrObjArtikl);
 
-            const res = await ProdanoService.getAllProdano();
+            const res = await ProdanoService.getAllProdano(baseUrl);
             setProdano(res.data);
 
             setVisibleModal(false);
@@ -122,7 +125,7 @@ const Prodano = () => {
         try {
             await Promise.all(
                 updatedArtikli.map(async (artikl) => {
-                    await ArtikliService.editArtikl(artikl.id, artikl);
+                    await ArtikliService.editArtikl(baseUrl, artikl.id, artikl);
                 })
             );
         } catch (error) {
@@ -150,10 +153,10 @@ const Prodano = () => {
     const deleteItem = async (id) => {
         setLoadingDelete(true);
         try {
-            await ProdanoService.deleteProdano(id);
+            await ProdanoService.deleteProdano(baseUrl, id);
             await updateDeletionArtiklStorage(id);
 
-            const res = await ProdanoService.getAllProdano();
+            const res = await ProdanoService.getAllProdano(baseUrl);
             setProdano(res.data);
 
             notification.success({ message: "Prodano uspješno izbrisana!", placement: "topRight" });
@@ -183,7 +186,7 @@ const Prodano = () => {
         try {
             await Promise.all(
                 updatedArtikli.map(async (artikl) => {
-                    await ArtikliService.editArtikl(artikl.id, artikl);
+                    await ArtikliService.editArtikl(baseUrl, artikl.id, artikl);
                 })
             );
         } catch (error) {
@@ -197,7 +200,7 @@ const Prodano = () => {
 
     const handleOnClose = async () => {
         setModalOpen(false);
-        const res = await ProdanoService.getAllProdano();
+        const res = await ProdanoService.getAllProdano(baseUrl);
         setProdano(res.data);
     };
 

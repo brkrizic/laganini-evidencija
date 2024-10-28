@@ -84,7 +84,7 @@ const Otpremnice = () => {
         try {
             await Promise.all(
                 updatedArtikl.map(async (artikl) => {
-                    await ArtikliService.editArtikl(artikl.id, artikl);
+                    await ArtikliService.editArtikl(baseUrl, artikl.id, artikl);
                 })
             );
         } catch (error) {
@@ -118,7 +118,7 @@ const Otpremnice = () => {
         };
 
         try {
-            await OtpremniceService.saveOtpremnica(otpremnicaObj);
+            await OtpremniceService.saveOtpremnica(baseUrl, otpremnicaObj);
             await updateArtiklStorage(arrObjArtikl);
 
             const res = await OtpremniceService.getAllOtpremnice(baseUrl);
@@ -199,7 +199,7 @@ const Otpremnice = () => {
         try {
             await Promise.all(
                 updatedArtikl.map(async (artikl) => {
-                    await ArtikliService.editArtikl(artikl.id, artikl);
+                    await ArtikliService.editArtikl(baseUrl, artikl.id, artikl);
                     console.log("Artikl updated: ", artikl);
                 })
             );
