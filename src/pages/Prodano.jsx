@@ -10,6 +10,7 @@ import { ArtikliService } from "../api/ArtikliService";
 import { ProdanoService } from "../api/ProdanoService";
 import { formatDateForDisplay, formatDateForServer } from "../convert/dateConverter";
 import { useBaseUrl } from "../contexts/BaseUrlContext";
+import ArtikliSelect from "./common/ArtikliSearch";
 dayjs.extend(customParseFormat);
 
 const { Option } = Select;
@@ -34,7 +35,7 @@ const Prodano = () => {
     const [idObjProdano, setIdObjProdano] = useState();
 
     const { baseUrl } = useBaseUrl();
-    
+
     useEffect(() => {
         const fetchData = async () => {
             setLoadingFetch(true);
@@ -241,16 +242,11 @@ const Prodano = () => {
                     <div>
                         <h3>Unesi artikle:</h3>
                         <label>Naziv artikla</label>
-                        <Select
-                            style={{ width: '100%' }}
-                            placeholder="Select an artikl"
-                            onChange={(value) => setNazivArtikla(value)}
-                            value={nazivArtikla}
-                        >
-                            {postojeciArtikli.map((artikl, idx) => (
-                                <Option key={idx} value={artikl}>{artikl}</Option>
-                            ))}
-                        </Select>
+                            <ArtikliSelect
+                                postojeciArtikli={postojeciArtikli}
+                                setNazivArtikla={setNazivArtikla}
+                                nazivArtikla={nazivArtikla}
+                            />
                         <label>Količina</label>
                         <Input value={iznosProdano} onChange={(e) => setIznosProdano(e.target.value)} />
                         <Button onClick={handleSaveArtikl}>Dodaj Artikl</Button>

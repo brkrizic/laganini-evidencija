@@ -10,6 +10,7 @@ import { ArtikliService } from "../api/ArtikliService";
 import { InventuraService } from "../api/InventuraService";
 import { formatDateForDisplay, formatDateForServer } from "../convert/dateConverter";
 import { useBaseUrl } from "../contexts/BaseUrlContext";
+import ArtikliSelect from "./common/ArtikliSearch";
 dayjs.extend(customParseFormat);
 
 const { Option } = Select;
@@ -252,16 +253,11 @@ const Inventura = () => {
                         <div>
                             <h3>Unesi artikle:</h3>
                             <label>Naziv artikla</label>
-                            <Select
-                                style={{ width: '100%' }}
-                                placeholder="Select an artikl"
-                                onChange={(value) => setNazivArtikla(value)}
-                                value={nazivArtikla}
-                            >
-                                {postojeciArtikli.map((artikl, idx) => (
-                                    <Option key={idx} value={artikl}>{artikl}</Option>
-                                ))}
-                            </Select>
+                            <ArtikliSelect
+                                postojeciArtikli={postojeciArtikli}
+                                setNazivArtikla={setNazivArtikla}
+                                nazivArtikla={nazivArtikla}
+                            />
                             <label>Količina</label>
                             <Input value={iznosInventure} onChange={(e) => setIznosInventure(e.target.value)} />
                             <Button onClick={handleSaveArtikl}>Dodaj Artikl</Button>

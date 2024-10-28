@@ -10,6 +10,7 @@ import { ArtikliService } from "../api/ArtikliService";
 import { OtpremniceService } from "../api/OtpremniceService";
 import { formatDateForDisplay, formatDateForServer } from "../convert/dateConverter";
 import { useBaseUrl } from "../contexts/BaseUrlContext";
+import ArtikliSelect from "./common/ArtikliSearch";
 dayjs.extend(customParseFormat);
 
 const { Option } = Select;
@@ -252,16 +253,13 @@ const Otpremnice = () => {
                         <div>
                             <h3>Unesi artikle:</h3>
                             <label>Naziv artikla</label>
-                            <Select
-                                style={{ width: '100%' }}
-                                placeholder="Select an artikl"
-                                onChange={(value) => setNazivArtikla(value)}
-                                value={nazivArtikla}
+                            <ArtikliSelect
+                                postojeciArtikli={postojeciArtikli}
+                                setNazivArtikla={setNazivArtikla}
+                                nazivArtikla={nazivArtikla}
                             >
-                                {postojeciArtikli.map((artikl, idx) => (
-                                    <Option key={idx} value={artikl}>{artikl}</Option>
-                                ))}
-                            </Select>
+
+                            </ArtikliSelect>
                             <label>Količina</label>
                             <Input value={iznosOtpremnice} onChange={(e) => setIznosOtpremnice(e.target.value)} />
                             <Button onClick={handleSaveArtikl}>Dodaj Artikl</Button>
