@@ -1,4 +1,4 @@
-import { Button, Input, Modal, Select, DatePicker, notification, Spin } from "antd";
+import { Button, Input, Modal, Select, DatePicker, notification, Spin, List } from "antd";
 import React, { useEffect, useState } from "react";
 import { v4 as uuidv4 } from 'uuid';
 import InventuraDetails from "../modal/InventuraDetails";
@@ -12,6 +12,7 @@ import { formatDateForDisplay, formatDateForServer } from "../convert/dateConver
 import { useBaseUrl } from "../contexts/BaseUrlContext";
 import ArtikliSelect from "./common/ArtikliSearch";
 import PdfUpload from "./common/PdfUpload";
+import PdfDetails from "../modal/PdfDetails";
 dayjs.extend(customParseFormat);
 
 const { Option } = Select;
@@ -23,6 +24,7 @@ const Inventura = () => {
     const [postojeciArtikli, setPostojeciArtikli] = useState([]);
     const [iznosInventure, setIznosInventure] = useState("");
     const [visibleModal, setVisibleModal] = useState(false);
+    const [visibleModalPdf, setVisibleModalPdf] = useState(false);
     const [visibleArtiklModal, setVisibleArtiklModal] = useState(false);
     const [inventure, setInventure] = useState([]);
     const [arrObjArtikl, setArrObjArtikl] = useState([]);
@@ -72,29 +74,40 @@ const Inventura = () => {
 
     const updateArtiklStorage = async (objArr) => {
         setLoadingSave(true);
-        const updatedArtikl = artikli.map((artikl) => {
-            const foundArtikl = objArr.find((obj) => obj.nazivArtikla === artikl.naziv);
-            if (foundArtikl) {
-                return {
-                    ...artikl,
-                    evidencijaRobe: parseFloat(artikl.evidencijaRobe) + parseFloat(foundArtikl.kolicina),
-                };
-            }
-            return artikl;
-        });
-
         try {
+            // Fetch the latest data before updating
+            const resArtikli = await ArtikliService.getAllArtikli(baseUrl);
+            const latestArtikli = resArtikli.data;
+    
+            // Create a map of artikli for easy lookup
+            const artikliMap = new Map(latestArtikli.map(artikl => [artikl.naziv, artikl]));
+    
+            // Update the artikli based on the objArr
+            objArr.forEach(obj => {
+                const artikl = artikliMap.get(obj.nazivArtikla);
+                if (artikl) {
+                    artikl.evidencijaRobe = (parseFloat(artikl.evidencijaRobe) + parseFloat(obj.kolicina)).toFixed(2);
+                }
+            });
+    
+            // Convert map back to an array for batch update
+            const updatedArtikli = Array.from(artikliMap.values());
+    
+            // Batch update all the updated artikli
             await Promise.all(
-                updatedArtikl.map(async (artikl) => {
+                updatedArtikli.map(async (artikl) => {
                     await ArtikliService.editArtikl(baseUrl, artikl.id, artikl);
                 })
             );
+    
+            console.log("Artikli successfully updated:", updatedArtikli);
         } catch (error) {
-            console.log("Error updating artikli: ", error);
+            console.error("Error updating artikli: ", error);
         } finally {
             setLoadingSave(false);
         }
     };
+    
 
     const handleSaveArtikl = () => {
         const objArtikl = {
@@ -222,6 +235,11 @@ const Inventura = () => {
         setInventure(resData);
     }
 
+    const handleUploadPDF = (articles) => {
+        setArrObjArtikl(articles);
+        setVisibleModalPdf(true);
+    };
+
     return (
         <>
             <div style={{ backgroundColor: "#0063a6", height: "50px", width: "100%" }}>
@@ -229,12 +247,30 @@ const Inventura = () => {
                     <h1 style={{ textAlign: "center", color: "white", marginTop: "0px" }}>Inventure</h1>
                 </div>
             </div>
-            <div style={{ margin: "10px" }}>
+            <div style={{ margin: "10px", display: "flex", flexDirection: "row"}}>
                 <Button onClick={handleOpenModal} type="primary">
                     Nova Inventura
                 </Button>
-                <PdfUpload setArrObjArtikl={setArrObjArtikl}/>
+                <PdfUpload setArrObjArtikl={handleUploadPDF}/>
             </div>
+            <Modal
+                title="Učitani Artikli"
+                visible={visibleModalPdf}
+                onOk={handleOk}
+                onCancel={() => setVisibleModalPdf(false)}
+            >
+                <List
+                    dataSource={arrObjArtikl}
+                    renderItem={(item) => (
+                        <List.Item>
+                            <List.Item.Meta
+                                title={item.nazivArtikla}
+                                description={`Količina: ${item.kolicina}`}
+                            />
+                        </List.Item>
+                    )}
+                />
+            </Modal>
             <div>
                 {visibleModal && (
                     <Modal

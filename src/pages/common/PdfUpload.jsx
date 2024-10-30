@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import { processArticles } from './utils/utils';
 import * as pdfjsLib from 'pdfjs-dist/webpack';
+import { Button, Card, Modal, Upload } from 'antd';
+import PdfDetails from '../../modal/PdfDetails';
+import { UploadOutlined } from '@ant-design/icons';
 
 const PdfUpload = ({ setArrObjArtikl }) => {
     const [file, setFile] = useState(null);
+    const [isOpenModal, setIsOpenModal] = useState(false);
 
     const handleFileChange = (event) => {
         const selectedFile = event.target.files[0];
@@ -54,18 +58,19 @@ const PdfUpload = ({ setArrObjArtikl }) => {
 
     const handleUpload = () => {
         if (!file) {
-            alert("Please select a PDF file.");
-            console.warn("No file selected!"); // Log warning if no file is selected
+            alert("Molimo vas oadaberite PDF datoteku.");
+            console.warn("Datoteka nije odabrana!"); // Log warning if no file is selected
             return;
         }
         console.log("Uploading file: ", file.name); // Log the file name being uploaded
         parsePDF(file);
+        setIsOpenModal(true);
     };
 
     return (
-        <div>
+        <div style={{ marginLeft: "10px"}}>
             <input type="file" accept=".pdf" onChange={handleFileChange} />
-            <button onClick={handleUpload}>Upload PDF</button>
+            <button onClick={handleUpload}>Učitaj PDF</button>
         </div>
     );
 };

@@ -76,11 +76,14 @@ const Otpremnice = () => {
         // Create a temporary object to hold the total quantities
         const totalQuantityUpdates = {};
     
+        // Aggregate quantities from objArr
         objArr.forEach(item => {
+            // Ensure kolicina is parsed to a float, defaulting to 0 if not valid
+            const kolicina = parseFloat(item.kolicina) || 0;
             if (!totalQuantityUpdates[item.nazivArtikla]) {
                 totalQuantityUpdates[item.nazivArtikla] = 0;
             }
-            totalQuantityUpdates[item.nazivArtikla] += parseFloat(item.kolicina);
+            totalQuantityUpdates[item.nazivArtikla] += kolicina;
         });
     
         try {
@@ -91,26 +94,31 @@ const Otpremnice = () => {
                     const artiklToUpdate = artikli.find(artikl => artikl.naziv === nazivArtikla);
                     
                     if (artiklToUpdate) {
-                        // Update the kupljenaKolicina
+                        // Calculate the new kupljenaKolicina safely
+                        const newKupljenaKolicina = (parseFloat(artiklToUpdate.kupljenaKolicina) || 0) + totalQuantityUpdates[nazivArtikla];
+    
+                        // Update the artikl object
                         const updatedArtikl = {
                             ...artiklToUpdate,
-                            kupljenaKolicina: parseFloat(artiklToUpdate.kupljenaKolicina) + totalQuantityUpdates[nazivArtikla],
+                            kupljenaKolicina: newKupljenaKolicina,
                         };
                         
                         // Save the updated artikl to the database
                         await ArtikliService.editArtikl(baseUrl, updatedArtikl.id, updatedArtikl);
+                    } else {
+                        console.warn(`Article not found for update: ${nazivArtikla}`);
                     }
                 })
             );
+    
+            console.log("All artikli successfully updated with new quantities:", totalQuantityUpdates);
         } catch (error) {
-            console.log("Error updating artikli: ", error);
+            console.error("Error updating artikli: ", error);
         } finally {
             setLoadingSave(false);
         }
     };
-        
     
-
     const handleSaveArtikl = () => {
         const objArtikl = {
             nazivArtikla: nazivArtikla,

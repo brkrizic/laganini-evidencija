@@ -112,29 +112,40 @@ const Prodano = () => {
 
     const updateArtiklStorage = async (objArr) => {
         setLoadingSave(true);
-        const updatedArtikli = artikli.map((artikl) => {
-            const foundArtikl = objArr.find((obj) => obj.nazivArtikla === artikl.naziv);
-            if (foundArtikl) {
-                return {
-                    ...artikl,
-                    prodajnaKolicina: parseFloat(artikl.prodajnaKolicina) + parseFloat(foundArtikl.kolicina),
-                };
-            }
-            return artikl;
-        });
-
         try {
+            // Create a map for the incoming articles for quick lookup
+            const objMap = new Map(objArr.map(obj => [obj.nazivArtikla, parseFloat(obj.kolicina)]));
+    
+            const updatedArtikli = artikli.map((artikl) => {
+                const foundKolicina = objMap.get(artikl.naziv);
+                if (foundKolicina !== undefined) {
+                    // Update prodajnaKolicina only if found
+                    return {
+                        ...artikl,
+                        prodajnaKolicina: (parseFloat(artikl.prodajnaKolicina) || 0) + foundKolicina,
+                    };
+                }
+                return artikl; // Return the original artikl if not found
+            });
+    
+            // Log the updated articles for debugging
+            console.log("Updated artikli: ", updatedArtikli);
+    
+            // Perform the batch update for all articles
             await Promise.all(
                 updatedArtikli.map(async (artikl) => {
                     await ArtikliService.editArtikl(baseUrl, artikl.id, artikl);
                 })
             );
+    
+            console.log("Artikli successfully updated:", updatedArtikli);
         } catch (error) {
-            console.log("Error updating artikli: ", error);
+            console.error("Error updating artikli: ", error);
         } finally {
             setLoadingSave(false);
         }
     };
+    
 
     const handleOpenModalDetails = (prodano) => {
         setModalOpen(true);
