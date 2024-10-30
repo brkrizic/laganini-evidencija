@@ -157,10 +157,10 @@ const UkupnaEvidencija = () => {
                         <label>Naziv:</label>
                     </div>
                     <Input value={naziv} onChange={(e) => setNaziv(e.target.value)}></Input>
-                    <Button type="default" onClick={resetFilter}>Resetiraj</Button>
                 </Menu.Item>
             </div>
             <div style={{ textAlign: 'right', margin: '10px', marginTop: '35px' }}>
+                <Button type="default" onClick={resetFilter}>Resetiraj</Button>
                 <Button type="primary" onClick={handleFilter}>Filtriraj</Button>
             </div>
         </Menu>
