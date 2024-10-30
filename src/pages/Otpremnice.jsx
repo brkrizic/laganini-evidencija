@@ -27,13 +27,14 @@ const Otpremnice = () => {
     const [arrObjArtikl, setArrObjArtikl] = useState([]);
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedOtpremnica, setSelectedOtpremnica] = useState(null);
-    const [datum, setDatum] = useState(dayjs('01/01/2024', 'DD/MM/YYYY'));
+    const [datum, setDatum] = useState(dayjs());
     const [deleteModal, setDeleteModal] = useState(false);
     const [keyToDelete, setKeyToDelete] = useState(null);
     const [loadingFetch, setLoadingFetch] = useState(false);
     const [loadingSave, setLoadingSave] = useState(false);
     const [loadingDelete, setLoadingDelete] = useState(false);
     const [idObjOtpremnica, setIdObjOtpremnica] = useState();
+    const [order, setOrder] = useState('');
 
     const { baseUrl } = useBaseUrl();
 
@@ -47,7 +48,7 @@ const Otpremnice = () => {
                 const artikliNaziv = artikliData.map((artikl) => artikl.naziv);
                 setPostojeciArtikli(artikliNaziv);
 
-                const resOtpremnice = await OtpremniceService.getAllOtpremnice(baseUrl);
+                const resOtpremnice = await OtpremniceService.getAllOtpremnice(baseUrl, order);
                 const otpremniceData = resOtpremnice.data;
                 setOtpremnice(otpremniceData);
             } catch (error) {
@@ -57,7 +58,7 @@ const Otpremnice = () => {
             }
         };
         fetchData();
-    }, []);
+    }, [order]);
 
     const handleOpenModal = () => {
         setVisibleModal(!visibleModal);
@@ -71,21 +72,34 @@ const Otpremnice = () => {
 
     const updateArtiklStorage = async (objArr) => {
         setLoadingSave(true);
-        const updatedArtikl = artikli.map((artikl) => {
-            const foundArtikl = objArr.find((obj) => obj.nazivArtikla === artikl.naziv);
-            if (foundArtikl) {
-                return {
-                    ...artikl,
-                    kupljenaKolicina: parseFloat(artikl.kupljenaKolicina) + parseFloat(foundArtikl.kolicina),
-                };
+        
+        // Create a temporary object to hold the total quantities
+        const totalQuantityUpdates = {};
+    
+        objArr.forEach(item => {
+            if (!totalQuantityUpdates[item.nazivArtikla]) {
+                totalQuantityUpdates[item.nazivArtikla] = 0;
             }
-            return artikl;
+            totalQuantityUpdates[item.nazivArtikla] += parseFloat(item.kolicina);
         });
-
+    
         try {
+            // Loop through the total quantity updates
             await Promise.all(
-                updatedArtikl.map(async (artikl) => {
-                    await ArtikliService.editArtikl(baseUrl, artikl.id, artikl);
+                Object.keys(totalQuantityUpdates).map(async (nazivArtikla) => {
+                    // Find the artikl in the current artikli state
+                    const artiklToUpdate = artikli.find(artikl => artikl.naziv === nazivArtikla);
+                    
+                    if (artiklToUpdate) {
+                        // Update the kupljenaKolicina
+                        const updatedArtikl = {
+                            ...artiklToUpdate,
+                            kupljenaKolicina: parseFloat(artiklToUpdate.kupljenaKolicina) + totalQuantityUpdates[nazivArtikla],
+                        };
+                        
+                        // Save the updated artikl to the database
+                        await ArtikliService.editArtikl(baseUrl, updatedArtikl.id, updatedArtikl);
+                    }
                 })
             );
         } catch (error) {
@@ -94,6 +108,8 @@ const Otpremnice = () => {
             setLoadingSave(false);
         }
     };
+        
+    
 
     const handleSaveArtikl = () => {
         const objArtikl = {
@@ -106,40 +122,93 @@ const Otpremnice = () => {
         setIznosOtpremnice("");
     };
 
+    const checkIfOtpremnicaExists = async (date) => {
+        const existingOtpremnica = otpremnice.find(o => formatDateForDisplay(dayjs(o.date)) === formatDateForDisplay(dayjs(date)));
+        return existingOtpremnica;
+    };
+
     const handleOk = async () => {
+        console.log("Starting handleOk");
         setLoadingSave(true);
         if (arrObjArtikl.length === 0) {
             alert("Please insert at least one article.");
             return;
         }
-
-        const otpremnicaObj = {
-            date: formatDateForServer(datum),
-            artikli: arrObjArtikl
-        };
-
+    
+        // Collect total quantities for each article to be processed
+        const totalArticles = {};
+    
+        arrObjArtikl.forEach(({ nazivArtikla, kolicina }) => {
+            if (!totalArticles[nazivArtikla]) {
+                totalArticles[nazivArtikla] = 0;
+            }
+            totalArticles[nazivArtikla] += parseFloat(kolicina);
+        });
+    
         try {
-            await OtpremniceService.saveOtpremnica(baseUrl, otpremnicaObj);
-            await updateArtiklStorage(arrObjArtikl);
-
-            const res = await OtpremniceService.getAllOtpremnice(baseUrl);
+            console.log("Checking if otpremnica exists for date:", datum);
+            const existingOtpremnica = await checkIfOtpremnicaExists(datum);
+            if (existingOtpremnica) {
+                console.log("Otpremnica exists, updating:", existingOtpremnica);
+                const updatedArtikli = [...existingOtpremnica.artikli];
+    
+                // Aggregate quantities for the existing articles
+                Object.keys(totalArticles).forEach(nazivArtikla => {
+                    const existingArtikl = updatedArtikli.find(a => a.nazivArtikla === nazivArtikla);
+                    if (existingArtikl) {
+                        existingArtikl.kolicina += totalArticles[nazivArtikla]; // Update existing quantity
+                    } else {
+                        // If it doesn't exist, add a new article
+                        updatedArtikli.push({ nazivArtikla, kolicina: totalArticles[nazivArtikla] });
+                    }
+                });
+    
+                const updatedOtpremnica = {
+                    ...existingOtpremnica,
+                    artikli: updatedArtikli
+                };
+    
+                await OtpremniceService.editOtpremnica(baseUrl, existingOtpremnica.id, updatedOtpremnica);
+                await updateArtiklStorage(arrObjArtikl);
+        
+                notification.success({
+                    message: "Otpremnica uspješno ažurirana!",
+                    placement: "topRight"
+                });
+            } else {
+                console.log("Creating a new otpremnica");
+                const otpremnicaObj = {
+                    date: formatDateForServer(datum),
+                    artikli: arrObjArtikl // Ensure unique entries here too
+                };
+        
+                await OtpremniceService.saveOtpremnica(baseUrl, otpremnicaObj);
+                await updateArtiklStorage(arrObjArtikl);
+        
+                notification.success({
+                    message: "Otpremnica uspješno pohranjena!",
+                    placement: "topRight"
+                });
+            }
+    
+            console.log("Refreshing otpremnice state");
+            const res = await OtpremniceService.getAllOtpremnice(baseUrl, order);
             setOtpremnice(res.data);
-
+    
             setVisibleArtiklModal(false);
             setVisibleModal(false);
             setNazivOtpremnice("");
             setArrObjArtikl([]);
         } catch (error) {
-            console.log(error);
+            console.error("Error in handleOk:", error);
+            notification.error({
+                message: "Došlo je do greške pri spremanju otpremnice.",
+                placement: "topRight"
+            });
         } finally {
             setLoadingSave(false);
         }
-
-        notification.success({
-            message: "Otpremnica uspješno pohranjena!",
-            placement: "topRight"
-        });
-    };
+    };    
 
     const handleOpenModalDetails = (otpremnica) => {
         setModalOpen(true);
@@ -173,7 +242,7 @@ const Otpremnice = () => {
             placement: "topRight"
         });
 
-        const res = await OtpremniceService.getAllOtpremnice(baseUrl);
+        const res = await OtpremniceService.getAllOtpremnice(baseUrl, order);
         setOtpremnice(res.data);
     };
 
@@ -185,7 +254,7 @@ const Otpremnice = () => {
     const updateDeletionArtiklStorage = async (id) => {
         const otpremnica = otpremnice.find(o => o.id === id);
         if(!otpremnica) return;
-
+    
         const updatedArtikl = artikli.map(artikl => {
             const foundArtikl = otpremnica.artikli.find(a => a.nazivArtikla === artikl.naziv);
             if(foundArtikl){
@@ -196,7 +265,7 @@ const Otpremnice = () => {
             }
             return artikl;
         });
-
+    
         try {
             await Promise.all(
                 updatedArtikl.map(async (artikl) => {
@@ -209,16 +278,20 @@ const Otpremnice = () => {
             console.log("Error updating artikli after deletion: ", error);
         }
     };
-
+    
     const handleSelectOtpremnica = (id) => {
         setIdObjOtpremnica(id);
     }
 
     const handleOnClose = async () => {
         setModalOpen(false);
-        const res = await OtpremniceService.getAllOtpremnice(baseUrl);
+        const res = await OtpremniceService.getAllOtpremnice(baseUrl, order);
         const resData = res.data;
         setOtpremnice(resData);
+    }
+
+    const handleSort = () => {
+        setOrder(prevOrder => (prevOrder === 'asc' ? 'desc' : 'asc'));
     }
 
     return (
@@ -232,6 +305,9 @@ const Otpremnice = () => {
                 <Button onClick={handleOpenModal} type="primary">
                     Nova otpremnica
                 </Button>
+            </div>
+            <div style={{ margin: "10px" }}>
+                <Button onClick={() => handleSort()}>Sortiraj</Button>
             </div>
             <div>
                 {visibleModal && (

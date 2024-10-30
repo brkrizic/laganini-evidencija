@@ -7,7 +7,7 @@ const BaseUrlContext = createContext();
 // Create a provider component
 export const BaseUrlProvider = ({ children }) => {
     // Set the initial base URL
-    const [baseUrl, setBaseUrl] = useState("http://78.1.220.187:8080");
+    const [baseUrl, setBaseUrl] = useState("http://localhost:8080");
 
     return (
         <BaseUrlContext.Provider value={{ baseUrl, setBaseUrl }}>

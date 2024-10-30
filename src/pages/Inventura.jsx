@@ -27,7 +27,7 @@ const Inventura = () => {
     const [arrObjArtikl, setArrObjArtikl] = useState([]);
     const [modalOpen, setModalOpen] = useState(false);
     const [selectedInventura, setSelectedInventura] = useState(null);
-    const [datum, setDatum] = useState(dayjs('01/01/2024', 'DD/MM/YYYY'));
+    const [datum, setDatum] = useState(dayjs());
     const [deleteModal, setDeleteModal] = useState(false);
     const [keyToDelete, setKeyToDelete] = useState(null);
     const [loadingFetch, setLoadingFetch] = useState(false);

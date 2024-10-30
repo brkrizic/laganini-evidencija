@@ -26,9 +26,18 @@ const OtpremnicaDetails = (props) => {
     }, [props.isOpen, props.storageItem]);
 
     const handleSaveUpdate = async () => {
-            // Validate all kolicina values before proceeding with the save
+        // Check for duplicate date before proceeding
+        if (handleSameDate(props.storageItem.date)) {
+            notification.warning({
+                message: 'Neispravna datum!',
+                description: 'Datum več postoji!.',
+                placement: 'topRight'
+            });
+            return; // Exit if duplicate date found
+        }
+
+        // Validate all kolicina values before proceeding with the save
         for (const item of artikliStorage) {
-            // Ensure kolicina is treated as a string
             const kolicinaValue = String(item.kolicina);
             if (kolicinaValue.trim() === "" || parseFloat(kolicinaValue) <= 0) {
                 notification.warning({
@@ -38,28 +47,29 @@ const OtpremnicaDetails = (props) => {
                 });
                 return; // Stop the save process if validation fails
             }
-    }
+        }
+
         try {
             const updatedStorage = {
                 date: props.storageItem.date,
                 artikli: artikliStorage
             };
 
-            const updatedArtikl = artikli.map(artikl => {
-                const foundArtikl = artikliStorage.find(a => a.nazivArtikla === artikl.naziv);
+            const updatedArtiklPromises = artikliStorage.map(async (artiklStorageItem) => {
+                const foundArtikl = artikli.find(artikl => artikl.naziv === artiklStorageItem.nazivArtikla);
                 if (foundArtikl) {
-                    return {
-                        ...artikl,
-                        kupljenaKolicina: parseFloat(foundArtikl.kolicina) // Replace previous quantity with new one
+                    const updatedArtikl = {
+                        ...foundArtikl,
+                        kupljenaKolicina: parseFloat(artiklStorageItem.kolicina)
                     };
+                    await ArtikliService.editArtikl(foundArtikl.id, updatedArtikl);
+                    return updatedArtikl;
                 }
-                return artikl;
+                return null;
             });
 
             await OtpremniceService.editOtpremnica(props.storageItem.id, updatedStorage);
-            await Promise.all(updatedArtikl.map(async (artikl) => {
-                await ArtikliService.editArtikl(artikl.id, artikl);
-            }));
+            await Promise.all(updatedArtiklPromises);
 
             notification.success({
                 message: 'Uspješno ažurirano!',
@@ -91,16 +101,22 @@ const OtpremnicaDetails = (props) => {
 
     const handleArtiklChange = (index, key, value) => {
         const updatedArtikli = [...artikliStorage];
-
-        // Replace the previous input for 'kolicina' with the new value
-        if (key === 'kolicina') {
-            updatedArtikli[index][key] = value; // Replace previous input
-        } else {
-            updatedArtikli[index][key] = value; // For other fields, keep existing logic
-        }
-
+        updatedArtikli[index][key] = value;
         setArtikliStorage(updatedArtikli);
     };
+
+    const handleSameDate = (date) => {
+        // This function checks if the date already exists in the storage
+        const duplicateDate = artikliStorage.some(item => formatDateForDisplay(item.date) === formatDateForDisplay(date));
+        if (duplicateDate) {
+            notification.error({
+                message: `Otpremnica s datumom ${formatDateForDisplay(date)} već postoji!`,
+                placement: 'topRight'
+            });
+            return true; // Indicate a duplicate date was found
+        }
+        return false; // No duplicate found
+    }
 
     return (
         <Modal
@@ -133,9 +149,6 @@ const OtpremnicaDetails = (props) => {
                                 <tr key={index}>
                                     {isChecked ? (
                                         <>
-                                            {/* <td style={{ border: '1px solid black', padding: '8px' }}>
-                                                <Input value={a.nazivArtikla} onChange={(e) => handleArtiklChange(index, 'nazivArtikla', e.target.value)} />
-                                            </td> */}
                                             <td style={{ border: '1px solid black', padding: '8px' }}>{a.nazivArtikla}</td>
                                             <td style={{ border: '1px solid black', padding: '8px', textAlign: "center" }}>
                                                 <Input value={a.kolicina} onChange={(e) => handleArtiklChange(index, 'kolicina', e.target.value)} />
@@ -162,3 +175,4 @@ const OtpremnicaDetails = (props) => {
 };
 
 export default OtpremnicaDetails;
+

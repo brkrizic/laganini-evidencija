@@ -4,9 +4,9 @@ import headers from "../url/headers";
 import axios from "axios";
 
 export const OtpremniceService = {
-    getAllOtpremnice: async (baseUrl) => {
+    getAllOtpremnice: async (baseUrl, sortOrder) => {
         try {
-            const response = await axios.get(`${baseUrl}/api/otpremnice`, {headers});
+            const response = await axios.get(`${baseUrl}/api/otpremnice`, {params: { sort: sortOrder}, headers});
             console.log(response);
             return response;
         } catch (error) {

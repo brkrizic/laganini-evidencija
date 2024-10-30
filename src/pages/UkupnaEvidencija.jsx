@@ -1,23 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { Table, Spin, notification, Button, Dropdown, Menu, Input, Slider } from "antd";
+import { Table, Spin, notification, Button, Dropdown, Menu, Input } from "antd";
 import "./styles/stylesTable.css";
 import { ArtikliService } from "../api/ArtikliService";
-import { baseUrl } from "../url/baseUrl";
 import { useBaseUrl } from "../contexts/BaseUrlContext";
 
 const UkupnaEvidencija = () => {
     const [dataSource, setDataSource] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [resetLoading, setResetLoading] = useState(false);
     const [visible, setVisible] = useState(false);
 
-    //Filter
+    // Filter
     const [naziv, setNaziv] = useState('');
     const [filteredData, setFilteredData] = useState([]);
-    const [evidencijaStanja, setEvidencijaStanja] = useState('');
-    const [evidencijaRobe, setEvidencijaRobe] = useState();
-    const [razlika, setRazlika] = useState('');
-    const [ukupnoProdano, setUkupnoProdano] = useState('');
-    const [ukupnoKupljeno, setUkupnoKupljeno] = useState('');
 
     const { baseUrl } = useBaseUrl();
 
@@ -101,11 +96,6 @@ const UkupnaEvidencija = () => {
         },
     ];
 
-
-    useEffect(() => {
-        console.log(naziv);
-    }, [naziv]);
-
     const handleFilter = () => {
         const newFilteredData = dataSource.filter(item =>
             item.naziv.toLowerCase().includes(naziv.toLowerCase())
@@ -117,37 +107,69 @@ const UkupnaEvidencija = () => {
     const resetFilter = () => {
         setFilteredData(dataSource);
         setNaziv('');
-    }
+    };
 
+    const resetAllArtikl = async () => {
+        const confirm = window.confirm("Are you sure you want to reset all article values?");
+        if (!confirm) return;
+    
+        setResetLoading(true); // Set loading state for reset action
+        const updatePromises = dataSource.map(async (artikl) => {
+            const artiklObj = {
+                naziv: artikl.naziv,
+                prodajnaKolicina: 0,
+                kupljenaKolicina: 0,
+                evidencijaRobe: 0
+            };
+    
+            try {
+                // Make sure to pass the correct baseUrl and id
+                const response = await ArtikliService.editArtikl(baseUrl, artikl.id, artiklObj);
+                console.log(`Updated ${artikl.naziv}:`, response.data); // Log the successful response
+            } catch (error) {
+                console.error(`Error updating artikl ${artikl.naziv}:`, error);
+                throw error; // Re-throw error to catch it later if needed
+            }
+        });
+    
+        try {
+            await Promise.all(updatePromises);
+            notification.success({
+                message: "Success",
+                description: "All articles have been reset successfully."
+            });
+            await fetchData(); // Ensure data is re-fetched after reset
+        } catch (error) {
+            notification.error({
+                message: "Error",
+                description: "Some articles could not be reset. Please check the console for details."
+            });
+        } finally {
+            setResetLoading(false); // Stop loading
+        }
+    };    
 
     const filterData = (
         <Menu>
-            <div style={{ margin: '10px'}}>
+            <div style={{ margin: '10px' }}>
                 <Menu.Item>
-                    <div style={{ marginRight: '5px'}}>
+                    <div style={{ marginRight: '5px' }}>
                         <label>Naziv:</label>
                     </div>
-                <Input value={naziv} onChange={(e) => setNaziv(e.target.value)}></Input>
-            </Menu.Item>
+                    <Input value={naziv} onChange={(e) => setNaziv(e.target.value)}></Input>
+                    <Button type="default" onClick={resetFilter}>Resetiraj</Button>
+                </Menu.Item>
             </div>
-            {/* <div style={{ margin: '10px'}}>
-                <Menu.Item>
-                    <div style={{ marginRight: '5px'}}>
-                        <label>Razlika:</label>
-                    </div>
-                <Input value={razlika} onChange={(e) => setRazlika(e.target.value)}></Input>
-            </Menu.Item>
-            </div> */}
-            <div style={{ textAlign: 'right', margin: '10px', marginTop: '35px'}}>
-                <Button type="default" onClick={() => resetFilter()}>Resetiraj</Button>
-                <Button type="primary" onClick={() => handleFilter()}>Filtriraj</Button>
+            <div style={{ textAlign: 'right', margin: '10px', marginTop: '35px' }}>
+                <Button type="primary" onClick={handleFilter}>Filtriraj</Button>
             </div>
         </Menu>
-    )
+    );
 
     const handleVisibleChange = (flag) => {
-        setVisible(flag)
+        setVisible(flag);
     }
+
     return (
         <div>
             <div style={{ backgroundColor: "#0063a6", height: "50px", width: "100%" }}>
@@ -156,15 +178,17 @@ const UkupnaEvidencija = () => {
                 </div>
             </div>
             <div style={{ margin: '10px' }}>
-            <Dropdown
-                overlay={filterData}
-                trigger={['click']}
-                onVisibleChange={handleVisibleChange}
-                visible={visible}
-            >
-
-                <Button>Filtriraj</Button>
-            </Dropdown>
+                <Dropdown
+                    overlay={filterData}
+                    trigger={['click']}
+                    onVisibleChange={handleVisibleChange}
+                    visible={visible}
+                >
+                    <Button>Filtriraj</Button>
+                </Dropdown>
+                <Button onClick={() => resetAllArtikl(dataSource)} loading={resetLoading}>
+                    Resetiraj vrijednosti artikla
+                </Button>
             </div>
             <Spin spinning={loading}>
                 <div style={{ display: "flex", flexDirection: "row", margin: "10px", marginLeft: "10px" }}>
