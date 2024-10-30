@@ -11,6 +11,7 @@ import { InventuraService } from "../api/InventuraService";
 import { formatDateForDisplay, formatDateForServer } from "../convert/dateConverter";
 import { useBaseUrl } from "../contexts/BaseUrlContext";
 import ArtikliSelect from "./common/ArtikliSearch";
+import PdfUpload from "./common/PdfUpload";
 dayjs.extend(customParseFormat);
 
 const { Option } = Select;
@@ -232,6 +233,7 @@ const Inventura = () => {
                 <Button onClick={handleOpenModal} type="primary">
                     Nova Inventura
                 </Button>
+                <PdfUpload setArrObjArtikl={setArrObjArtikl}/>
             </div>
             <div>
                 {visibleModal && (
@@ -257,7 +259,7 @@ const Inventura = () => {
                                 postojeciArtikli={postojeciArtikli}
                                 setNazivArtikla={setNazivArtikla}
                                 nazivArtikla={nazivArtikla}
-                            />
+                            /> 
                             <label>Količina</label>
                             <Input value={iznosInventure} onChange={(e) => setIznosInventure(e.target.value)} />
                             <Button onClick={handleSaveArtikl}>Dodaj Artikl</Button>
