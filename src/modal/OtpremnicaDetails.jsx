@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { formatDateForDisplay } from "../convert/dateConverter";
 import { OtpremniceService } from "../api/OtpremniceService";
 import { ArtikliService } from "../api/ArtikliService";
+import { useBaseUrl } from "../contexts/BaseUrlContext";
 
 const OtpremnicaDetails = (props) => {
     const [isModalOpen, setIsModalOpen] = useState(props.isOpen);
@@ -10,10 +11,12 @@ const OtpremnicaDetails = (props) => {
     const [artikliStorage, setArtikliStorage] = useState(props.storageItem?.artikli || []);
     const [artikli, setArtikli] = useState([]);
 
+    const { baseUrl } = useBaseUrl();
+
     useEffect(() => {
         const fetchArtikli = async () => {
             try {
-                const res = await ArtikliService.getAllArtikli();
+                const res = await ArtikliService.getAllArtikli(baseUrl);
                 setArtikli(res.data);
             } catch (error) {
                 console.error("Failed to fetch artikli:", error);
@@ -26,55 +29,61 @@ const OtpremnicaDetails = (props) => {
     }, [props.isOpen, props.storageItem]);
 
     const handleSaveUpdate = async () => {
-        // Check for duplicate date before proceeding
-        if (handleSameDate(props.storageItem.date)) {
-            notification.warning({
-                message: 'Neispravna datum!',
-                description: 'Datum več postoji!.',
-                placement: 'topRight'
-            });
-            return; // Exit if duplicate date found
-        }
-
         // Validate all kolicina values before proceeding with the save
         for (const item of artikliStorage) {
             const kolicinaValue = String(item.kolicina);
             if (kolicinaValue.trim() === "" || parseFloat(kolicinaValue) <= 0) {
                 notification.warning({
                     message: 'Neispravna količina!',
-                    description: 'Sva količina polja moraju biti veća od 0.',
+                    description: `Količina za "${item.nazivArtikla}" mora biti veća od 0.`,
                     placement: 'topRight'
                 });
                 return; // Stop the save process if validation fails
             }
         }
-
+    
         try {
             const updatedStorage = {
                 date: props.storageItem.date,
                 artikli: artikliStorage
             };
-
+    
+            // Log updatedStorage for debugging
+            console.log("Updated Storage:", updatedStorage);
+    
+            // Array of promises to update each article
             const updatedArtiklPromises = artikliStorage.map(async (artiklStorageItem) => {
                 const foundArtikl = artikli.find(artikl => artikl.naziv === artiklStorageItem.nazivArtikla);
                 if (foundArtikl) {
+                    // Replace the kupljenaKolicina with the new value
                     const updatedArtikl = {
                         ...foundArtikl,
-                        kupljenaKolicina: parseFloat(artiklStorageItem.kolicina)
+                        kupljenaKolicina: parseFloat(artiklStorageItem.kolicina) // Replace value
                     };
-                    await ArtikliService.editArtikl(foundArtikl.id, updatedArtikl);
-                    return updatedArtikl;
+    
+                    // Log each updated artikl for debugging
+                    console.log("Updating Artikl:", updatedArtikl);
+    
+                    await ArtikliService.editArtikl(baseUrl, foundArtikl.id, updatedArtikl);
+                    return updatedArtikl; // Return the updated article (optional)
                 }
-                return null;
+                return null; // If not found, return null (optional)
             });
-
-            await OtpremniceService.editOtpremnica(props.storageItem.id, updatedStorage);
+    
+            // Update the Otpremnica
+            await OtpremniceService.editOtpremnica(baseUrl, props.storageItem.id, updatedStorage);
+            
+            // Await the completion of all updates
             await Promise.all(updatedArtiklPromises);
-
+    
             notification.success({
                 message: 'Uspješno ažurirano!',
                 placement: 'topRight'
             });
+            
+            // Optional: Refresh local state if needed
+            setArtikliStorage(prev => [...prev]); // Update state to re-render if necessary
+    
             handleOnClose();
         } catch (error) {
             console.error('Error saving updates:', error);
@@ -84,6 +93,8 @@ const OtpremnicaDetails = (props) => {
             });
         }
     };
+    
+    
 
     const handleOnClose = () => {
         setIsModalOpen(false);
@@ -105,18 +116,18 @@ const OtpremnicaDetails = (props) => {
         setArtikliStorage(updatedArtikli);
     };
 
-    const handleSameDate = (date) => {
-        // This function checks if the date already exists in the storage
-        const duplicateDate = artikliStorage.some(item => formatDateForDisplay(item.date) === formatDateForDisplay(date));
-        if (duplicateDate) {
-            notification.error({
-                message: `Otpremnica s datumom ${formatDateForDisplay(date)} već postoji!`,
-                placement: 'topRight'
-            });
-            return true; // Indicate a duplicate date was found
-        }
-        return false; // No duplicate found
-    }
+    // const handleSameDate = (date) => {
+    //     // This function checks if the date already exists in the storage
+    //     const duplicateDate = artikliStorage.some(item => formatDateForDisplay(item.date) === formatDateForDisplay(date));
+    //     if (duplicateDate) {
+    //         notification.error({
+    //             message: `Otpremnica s datumom ${formatDateForDisplay(date)} već postoji!`,
+    //             placement: 'topRight'
+    //         });
+    //         return true; // Indicate a duplicate date was found
+    //     }
+    //     return false; // No duplicate found
+    // }
 
     return (
         <Modal
