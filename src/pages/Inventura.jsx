@@ -140,7 +140,8 @@ const Inventura = () => {
     const handleOk = async () => {
         setLoadingSave(true);
         if (arrObjArtikl.length === 0) {
-            alert("Please insert at least one article.");
+            notification.warning({ message: "Please insert at least one article." });
+            setLoadingSave(false);
             return;
         }
 
@@ -151,7 +152,6 @@ const Inventura = () => {
 
         try {
             await InventuraService.saveInventura(baseUrl, inventuraObj);
-            await updateArtiklStorage(arrObjArtikl);
 
             const res = await InventuraService.getAllInventure(baseUrl);
             setInventure(res.data);
@@ -191,55 +191,23 @@ const Inventura = () => {
         setLoadingDelete(true);
         try {
             await InventuraService.deleteInventura(baseUrl, id);
-            await updateDeletionArtiklStorage(id);
+
+            const res = await InventuraService.getAllInventure(baseUrl);
+            setInventure(res.data);
+            notification.success({message: "Inventura uspješno izbrisana!", placement: "topRight"});
         } catch (error) {
             console.log(error);
         } finally {
             setLoadingDelete(false);
+            setDeleteModal(false);
         }
-
-        setDeleteModal(false);
-        notification.success({
-            message: "Inventura uspješno izbrisana!",
-            placement: "topRight"
-        });
-
-        const res = await InventuraService.getAllInventure(baseUrl);
-        setInventure(res.data);
+        
     };
 
     const handleCount = (id) => {
         const inventura = inventure.find(o => o.id === id);
         return inventura ? inventura.artikli.length : 0;
     }
-
-    const updateDeletionArtiklStorage = async (id) => {
-        const inventura = inventure.find(o => o.id === id);
-        if(!inventura) return;
-
-        const updatedArtikl = artikli.map(artikl => {
-            const foundArtikl = inventura.artikli.find(a => a.nazivArtikla === artikl.naziv);
-            if(foundArtikl){
-                return {
-                    ...artikl,
-                    evidencijaRobe: parseFloat(artikl.evidencijaRobe) - parseFloat(foundArtikl.kolicina)
-                };
-            }
-            return artikl;
-        });
-
-        try {
-            await Promise.all(
-                updatedArtikl.map(async (artikl) => {
-                    await ArtikliService.editArtikl(baseUrl, artikl.id, artikl);
-                    console.log("Artikl updated: ", artikl);
-                })
-            );
-            console.log("Artikli updated after deletion: ", JSON.stringify(updatedArtikl));
-        } catch (error) {
-            console.log("Error updating artikli after deletion: ", error);
-        }
-    };
 
     const handleSelectInventura = (id) => {
         setIdObjInventura(id);
@@ -326,7 +294,7 @@ const Inventura = () => {
                             {loadingSave ? 
                                 <div style={{ backgroundColor: "black"}}>
                                     <Spin />
-                                </div> : "Spremi Otpremnicu"}
+                                </div> : "Spremi Inventuru"}
                         </Button>
                     </Modal>
                 )}

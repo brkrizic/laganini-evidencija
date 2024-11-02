@@ -52,21 +52,7 @@ const Prodano = (props) => {
                 artikli: artikliStorage
             };
 
-            const updatedArtikl = artikli.map(artikl => {
-                const foundArtikl = artikliStorage.find(a => a.nazivArtikla === artikl.naziv);
-                if (foundArtikl) {
-                    return {
-                        ...artikl,
-                        prodajnaKolicina: parseFloat(foundArtikl.kolicina) // Replace previous quantity with new one
-                    };
-                }
-                return artikl;
-            });
-
             await ProdanoService.editProdano(baseUrl, props.storageItem.id, updatedStorage);
-            await Promise.all(updatedArtikl.map(async (artikl) => {
-                await ArtikliService.editArtikl(baseUrl, artikl.id, artikl);
-            }));
 
             notification.success({
                 message: 'Uspješno ažurirano!',
@@ -118,7 +104,7 @@ const Prodano = (props) => {
             onCancel={handleOnClose}
             cancelText="Odustani"
             onOk={handleOnOk}
-            okText="Spremi promjene"
+            okText="Uredu"
             title={props.title}
         >
             {loading ? ( // Display spinner if loading

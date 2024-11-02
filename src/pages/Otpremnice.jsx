@@ -21,6 +21,8 @@ const Otpremnice = () => {
     const [nazivOtpremnice, setNazivOtpremnice] = useState("");
     const [nazivArtikla, setNazivArtikla] = useState("");
     const [postojeciArtikli, setPostojeciArtikli] = useState([]);
+    const [updateArtikli, setUpdateArtikli] = useState([]);
+    const [updateOtpremnice, setUpdateOtpremnie] = useState([]);
     const [iznosOtpremnice, setIznosOtpremnice] = useState("");
     const [visibleModal, setVisibleModal] = useState(false);
     const [visibleArtiklModal, setVisibleArtiklModal] = useState(false);
@@ -60,6 +62,7 @@ const Otpremnice = () => {
         };
         fetchData();
     }, [order]);
+
 
     const handleOpenModal = () => {
         setVisibleModal(!visibleModal);
@@ -160,16 +163,6 @@ const Otpremnice = () => {
             return;
         }
     
-        // Collect total quantities for each article to be processed
-        const totalArticles = {};
-        console.log("arrObjArtikli" + arrObjArtikl);
-        arrObjArtikl.forEach(({ nazivArtikla, kolicina }) => {
-            if (!totalArticles[nazivArtikla]) {
-                totalArticles[nazivArtikla] = 0;
-            }
-            totalArticles[nazivArtikla] += parseFloat(kolicina);
-        });
-    
         try {
             console.log("Checking if otpremnica exists for date:", datum);
             const existingOtpremnica = await checkIfOtpremnicaExists(datum);
@@ -190,7 +183,6 @@ const Otpremnice = () => {
             };
     
             await OtpremniceService.saveOtpremnica(baseUrl, otpremnicaObj);
-            await updateArtiklStorage(arrObjArtikl);
     
             notification.success({
                 message: "Otpremnica uspješno pohranjena!",
@@ -236,7 +228,6 @@ const Otpremnice = () => {
         setLoadingDelete(true);
         try {
             await OtpremniceService.deleteOtpremnica(baseUrl, id);
-            await updateDeletionArtiklStorage(id);
         } catch (error) {
             console.log(error);
         } finally {

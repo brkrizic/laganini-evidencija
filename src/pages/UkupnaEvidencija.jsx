@@ -194,9 +194,9 @@ const UkupnaEvidencija = () => {
                 >
                     <Button>Filtriraj</Button>
                 </Dropdown>
-                <Button onClick={() => resetAllArtikl(dataSource)} loading={resetLoading}>
+                {/* <Button onClick={() => resetAllArtikl(dataSource)} loading={resetLoading}>
                     Resetiraj vrijednosti artikla
-                </Button>
+                </Button> */}
                 <div style={{ textAlign: "right", marginTop: "-30px"}}>
                     <PDFDownloadLink document={<MainPdfDocument 
                                                     date={dayjs()}

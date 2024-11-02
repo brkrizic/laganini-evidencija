@@ -56,24 +56,7 @@ const InventuraDetails = (props) => {
 
             console.log("Updated Storage:", updatedStorage);
 
-            const updatedArtikl = artikli.map(artikl => {
-                const foundArtikl = artikliStorage.find(a => a.nazivArtikla === artikl.naziv);
-                if (foundArtikl) {
-                    return {
-                        ...artikl,
-                        evidencijaRobe: parseFloat(foundArtikl.kolicina)
-                    };
-                }
-                return artikl;
-            });
-
             await InventuraService.editInventura(baseUrl, props.storageItem.id, updatedStorage);
-
-            console.log("Updated Artikli:", updatedArtikl);
-
-            await Promise.all(updatedArtikl.map(async (artikl) => {
-                await ArtikliService.editArtikl(baseUrl, artikl.id, artikl);
-            }));
 
             notification.success({
                 message: 'Uspješno ažurirano!',
@@ -118,7 +101,7 @@ const InventuraDetails = (props) => {
             onCancel={handleOnClose}
             cancelText="Odustani"
             onOk={handleOnOk}
-            okText="Spremi promjene"
+            okText="Uredu"
             title={props.title}
         >
             {loading ? ( // Display spinner if loading

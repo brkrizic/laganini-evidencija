@@ -112,7 +112,6 @@ const Prodano = () => {
 
         try {
             await ProdanoService.saveProdano(baseUrl, prodanoObj);
-            await updateArtiklStorage(arrObjArtikl);
 
             const res = await ProdanoService.getAllProdano(baseUrl);
             setProdano(res.data);
@@ -183,7 +182,6 @@ const Prodano = () => {
         setLoadingDelete(true);
         try {
             await ProdanoService.deleteProdano(baseUrl, id);
-            await updateDeletionArtiklStorage(id);
 
             const res = await ProdanoService.getAllProdano(baseUrl);
             setProdano(res.data);
@@ -194,32 +192,6 @@ const Prodano = () => {
         } finally {
             setLoadingDelete(false);
             setDeleteModal(false);
-        }
-    };
-
-    const updateDeletionArtiklStorage = async (id) => {
-        const prodanoItem = prodano.find(o => o.id === id);
-        if (!prodanoItem) return;
-
-        const updatedArtikli = artikli.map(artikl => {
-            const foundArtikl = prodanoItem.artikli.find(a => a.nazivArtikla === artikl.naziv);
-            if (foundArtikl) {
-                return {
-                    ...artikl,
-                    prodajnaKolicina: parseFloat(artikl.prodajnaKolicina) - parseFloat(foundArtikl.kolicina)
-                };
-            }
-            return artikl;
-        });
-
-        try {
-            await Promise.all(
-                updatedArtikli.map(async (artikl) => {
-                    await ArtikliService.editArtikl(baseUrl, artikl.id, artikl);
-                })
-            );
-        } catch (error) {
-            console.log("Error updating artikli after deletion: ", error);
         }
     };
 
@@ -288,7 +260,7 @@ const Prodano = () => {
                         {loadingSave ? 
                             <div style={{ backgroundColor: "black"}}>
                                 <Spin />
-                            </div> : "Spremi Otpremnicu"}
+                            </div> : "Spremi Prodano"}
                     </Button>
                 </Modal>
             )}

@@ -33,8 +33,7 @@ const OtpremnicaDetails = (props) => {
     const handleSaveUpdate = async () => {
         // Validate all kolicina values before proceeding with the save
         for (const item of artikliStorage) {
-            const kolicinaValue = String(item.kolicina);
-            if (kolicinaValue.trim() === "" || parseFloat(kolicinaValue) <= 0) {
+            if (item.kolicina == null || isNaN(item.kolicina) || item.kolicina <= 0) {
                 notification.warning({
                     message: 'Neispravna količina!',
                     description: `Količina za "${item.nazivArtikla}" mora biti veća od 0.`,
@@ -50,41 +49,15 @@ const OtpremnicaDetails = (props) => {
                 artikli: artikliStorage
             };
     
-            // Log updatedStorage for debugging
-            console.log("Updated Storage:", updatedStorage);
-    
-            // Array of promises to update each article
-            const updatedArtiklPromises = artikliStorage.map(async (artiklStorageItem) => {
-                const foundArtikl = artikli.find(artikl => artikl.naziv === artiklStorageItem.nazivArtikla);
-                if (foundArtikl) {
-                    // Replace the kupljenaKolicina with the new value
-                    const updatedArtikl = {
-                        ...foundArtikl,
-                        kupljenaKolicina: parseFloat(artiklStorageItem.kolicina) // Replace value
-                    };
-    
-                    // Log each updated artikl for debugging
-                    console.log("Updating Artikl:", updatedArtikl);
-    
-                    await ArtikliService.editArtikl(baseUrl, foundArtikl.id, updatedArtikl);
-                    return updatedArtikl; // Return the updated article (optional)
-                }
-                return null; // If not found, return null (optional)
-            });
+            console.log("Updated Storage:", updatedStorage); // Log updated storage
     
             // Update the Otpremnica
             await OtpremniceService.editOtpremnica(baseUrl, props.storageItem.id, updatedStorage);
-            
-            // Await the completion of all updates
-            await Promise.all(updatedArtiklPromises);
     
             notification.success({
                 message: 'Uspješno ažurirano!',
                 placement: 'topRight'
             });
-            
-            // Optional: Refresh local state if needed
-            setArtikliStorage(prev => [...prev]); // Update state to re-render if necessary
     
             handleOnClose();
         } catch (error) {
@@ -96,8 +69,6 @@ const OtpremnicaDetails = (props) => {
         }
     };
     
-    
-
     const handleOnClose = () => {
         setIsModalOpen(false);
         setIsChecked(false);
@@ -105,7 +76,7 @@ const OtpremnicaDetails = (props) => {
     };
 
     const handleOnOk = () => {
-       // handleSaveUpdate();
+       //handleSaveUpdate();
        handleOnClose();
     };
 
@@ -114,10 +85,22 @@ const OtpremnicaDetails = (props) => {
     };
 
     const handleArtiklChange = (index, key, value) => {
-        const updatedArtikli = [...artikliStorage];
-        updatedArtikli[index][key] = value;
-        setArtikliStorage(updatedArtikli);
+        const numericValue = parseFloat(value); // Ensure it's a number
+    
+        // Check if the value is valid
+        if (!isNaN(numericValue) && numericValue >= 0) {
+            const updatedArtikli = [...artikliStorage];
+            updatedArtikli[index][key] = numericValue; // Use the numeric value
+            setArtikliStorage(updatedArtikli);
+        } else {
+            notification.warning({
+                message: 'Neispravna količina!',
+                description: `Količina mora biti broj veći ili jednak nuli.`,
+                placement: 'topRight'
+            });
+        }
     };
+    
 
     // const handleSameDate = (date) => {
     //     // This function checks if the date already exists in the storage
