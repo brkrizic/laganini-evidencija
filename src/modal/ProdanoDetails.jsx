@@ -4,6 +4,8 @@ import { ProdanoService } from "../api/ProdanoService";
 import { Form, Input, Modal, notification, Switch, Spin } from "antd"; // Import Spin from antd
 import { formatDateForDisplay } from "../convert/dateConverter";
 import { useBaseUrl } from "../contexts/BaseUrlContext";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import PdfDocument from "../validation/PdfDocument";
 
 const Prodano = (props) => {
     const [isModalOpen, setIsModalOpen] = useState(props.isOpen);
@@ -166,6 +168,17 @@ const Prodano = (props) => {
                     </Form.Item>
                 </Form>
             )}
+            <div>
+                <PDFDownloadLink document={<PdfDocument 
+                                                date={formatDateForDisplay(props.storageItem?.date)}
+                                                artikli={artikliStorage}
+                                                title={"Prodano"}
+                                            />} fileName="prodano.pdf">
+                    {({ blob, url, loading, error }) =>
+                        loading ? 'Učitavanje dokumenta...' : 'Preuzmi PDF'
+                    }
+                </PDFDownloadLink>
+            </div>
         </Modal>
     );
 };

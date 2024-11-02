@@ -4,6 +4,8 @@ import { InventuraService } from "../api/InventuraService";
 import { ArtikliService } from "../api/ArtikliService";
 import { formatDateForDisplay } from "../convert/dateConverter";
 import { useBaseUrl } from "../contexts/BaseUrlContext";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import PdfDocument from "../validation/PdfDocument";
 
 const InventuraDetails = (props) => {
     const [isModalOpen, setIsModalOpen] = useState(props.isOpen);
@@ -166,6 +168,17 @@ const InventuraDetails = (props) => {
                     </Form.Item>
                 </Form>
             )}
+            <div>
+                <PDFDownloadLink document={<PdfDocument 
+                                                date={formatDateForDisplay(props.storageItem?.date)}
+                                                artikli={artikliStorage}
+                                                title={"Inventura"}
+                                            />} fileName="inventura.pdf">
+                    {({ blob, url, loading, error }) =>
+                        loading ? 'Učitavanje dokumenta...' : 'Preuzmi PDF'
+                    }
+                </PDFDownloadLink>
+            </div>
         </Modal>
     );
 };

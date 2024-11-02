@@ -3,12 +3,19 @@ import { Table, Spin, notification, Button, Dropdown, Menu, Input } from "antd";
 import "./styles/stylesTable.css";
 import { ArtikliService } from "../api/ArtikliService";
 import { useBaseUrl } from "../contexts/BaseUrlContext";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import PdfDocument from "../validation/PdfDocument";
+import customParseFormat from 'dayjs/plugin/customParseFormat';
+import dayjs from 'dayjs';
+import MainPdfDocument from "../validation/MainPdfDocument";
+dayjs.extend(customParseFormat);
 
 const UkupnaEvidencija = () => {
     const [dataSource, setDataSource] = useState([]);
     const [loading, setLoading] = useState(false);
     const [resetLoading, setResetLoading] = useState(false);
     const [visible, setVisible] = useState(false);
+    const [artikliStorage, setArtikliStorage] = useState([]);
 
     // Filter
     const [naziv, setNaziv] = useState('');
@@ -37,6 +44,7 @@ const UkupnaEvidencija = () => {
 
     useEffect(() => {
         fetchData();
+
     }, []);
 
     const handleIzracunaj = (data) => {
@@ -189,6 +197,17 @@ const UkupnaEvidencija = () => {
                 <Button onClick={() => resetAllArtikl(dataSource)} loading={resetLoading}>
                     Resetiraj vrijednosti artikla
                 </Button>
+                <div style={{ textAlign: "right", marginTop: "-30px"}}>
+                    <PDFDownloadLink document={<MainPdfDocument 
+                                                    date={dayjs()}
+                                                    artikli={dataSource}
+                                                    title={"Ukupna Evidencija"}
+                                                />} fileName="ukupnaEvidencija.pdf">
+                        {({ blob, url, loading, error }) =>
+                            loading ? <Spin>'Učitavanje dokumenta...'</Spin> : 'Preuzmi PDF'
+                        }
+                    </PDFDownloadLink>
+                </div>
             </div>
             <Spin spinning={loading}>
                 <div style={{ display: "flex", flexDirection: "row", margin: "10px", marginLeft: "10px" }}>

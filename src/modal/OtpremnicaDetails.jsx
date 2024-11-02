@@ -4,6 +4,8 @@ import { formatDateForDisplay } from "../convert/dateConverter";
 import { OtpremniceService } from "../api/OtpremniceService";
 import { ArtikliService } from "../api/ArtikliService";
 import { useBaseUrl } from "../contexts/BaseUrlContext";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import PdfDocument from "../validation/PdfDocument";  // Make sure the path is correct
 
 const OtpremnicaDetails = (props) => {
     const [isModalOpen, setIsModalOpen] = useState(props.isOpen);
@@ -180,8 +182,19 @@ const OtpremnicaDetails = (props) => {
                             )}
                         </tbody>
                     </table>
-                </Form.Item>
+                </Form.Item>          
             </Form>
+            <div>
+                <PDFDownloadLink document={<PdfDocument 
+                                                date={formatDateForDisplay(props.storageItem?.date)}
+                                                artikli={artikliStorage}
+                                                title={"Otpremnica"}
+                                            />} fileName="otpremnics.pdf">
+                    {({ blob, url, loading, error }) =>
+                        loading ? 'Učitavanje dokumenta...' : 'Preuzmi PDF'
+                    }
+                </PDFDownloadLink>
+            </div>
         </Modal>
     );
 };
