@@ -173,48 +173,29 @@ const Otpremnice = () => {
         try {
             console.log("Checking if otpremnica exists for date:", datum);
             const existingOtpremnica = await checkIfOtpremnicaExists(datum);
+            
+            // Check for an existing entry for the same date
             if (existingOtpremnica) {
-                console.log("Otpremnica exists, updating:", existingOtpremnica);
-                const updatedArtikli = [...existingOtpremnica.artikli];
-    
-                // Aggregate quantities for the existing articles
-                Object.keys(totalArticles).forEach(nazivArtikla => {
-                    const existingArtikl = updatedArtikli.find(a => a.nazivArtikla === nazivArtikla);
-                    if (existingArtikl) {
-                        existingArtikl.kolicina += totalArticles[nazivArtikla]; // Update existing quantity
-                    } else {
-                        // If it doesn't exist, add a new article
-                        updatedArtikli.push({ nazivArtikla, kolicina: totalArticles[nazivArtikla] });
-                    }
+                notification.error({
+                    message: `Otpremnica s datumom ${formatDateForDisplay(datum)} već postoji!`,
+                    placement: 'topRight'
                 });
-    
-                const updatedOtpremnica = {
-                    ...existingOtpremnica,
-                    artikli: updatedArtikli
-                };
-    
-                await OtpremniceService.editOtpremnica(baseUrl, existingOtpremnica.id, updatedOtpremnica);
-                await updateArtiklStorage(arrObjArtikl);
-        
-                notification.success({
-                    message: "Otpremnica uspješno ažurirana!",
-                    placement: "topRight"
-                });
-            } else {
-                console.log("Creating a new otpremnica");
-                const otpremnicaObj = {
-                    date: formatDateForServer(datum),
-                    artikli: arrObjArtikl // Ensure unique entries here too
-                };
-        
-                await OtpremniceService.saveOtpremnica(baseUrl, otpremnicaObj);
-                await updateArtiklStorage(arrObjArtikl);
-        
-                notification.success({
-                    message: "Otpremnica uspješno pohranjena!",
-                    placement: "topRight"
-                });
+                return; // Stop the execution here if the entry exists
             }
+            
+            console.log("Creating a new otpremnica");
+            const otpremnicaObj = {
+                date: formatDateForServer(datum),
+                artikli: arrObjArtikl // Ensure unique entries here too
+            };
+    
+            await OtpremniceService.saveOtpremnica(baseUrl, otpremnicaObj);
+            await updateArtiklStorage(arrObjArtikl);
+    
+            notification.success({
+                message: "Otpremnica uspješno pohranjena!",
+                placement: "topRight"
+            });
     
             console.log("Refreshing otpremnice state");
             const res = await OtpremniceService.getAllOtpremnice(baseUrl, order);
@@ -233,7 +214,8 @@ const Otpremnice = () => {
         } finally {
             setLoadingSave(false);
         }
-    };    
+    };
+        
 
     const handleOpenModalDetails = (otpremnica) => {
         setModalOpen(true);
@@ -278,17 +260,27 @@ const Otpremnice = () => {
 
     const updateDeletionArtiklStorage = async (id) => {
         const otpremnica = otpremnice.find(o => o.id === id);
-        if(!otpremnica) return;
+        if (!otpremnica) return;
+    
+        // Create a mapping of article names to their quantities to be subtracted
+        const quantitiesToSubtract = {};
+        
+        otpremnica.artikli.forEach(({ nazivArtikla, kolicina }) => {
+            if (!quantitiesToSubtract[nazivArtikla]) {
+                quantitiesToSubtract[nazivArtikla] = 0;
+            }
+            quantitiesToSubtract[nazivArtikla] += parseFloat(kolicina); // Ensure kolicina is treated as a float
+        });
     
         const updatedArtikl = artikli.map(artikl => {
-            const foundArtikl = otpremnica.artikli.find(a => a.nazivArtikla === artikl.naziv);
-            if(foundArtikl){
+            const quantityToSubtract = quantitiesToSubtract[artikl.naziv];
+            if (quantityToSubtract) {
                 return {
                     ...artikl,
-                    kupljenaKolicina: parseFloat(artikl.kupljenaKolicina) - parseFloat(foundArtikl.kolicina)
+                    kupljenaKolicina: (parseFloat(artikl.kupljenaKolicina) || 0) - quantityToSubtract
                 };
             }
-            return artikl;
+            return artikl; // No change for articles not found in the deleted otpremnica
         });
     
         try {
@@ -302,7 +294,7 @@ const Otpremnice = () => {
         } catch (error) {
             console.log("Error updating artikli after deletion: ", error);
         }
-    };
+    };    
     
     const handleSelectOtpremnica = (id) => {
         setIdObjOtpremnica(id);
@@ -317,6 +309,19 @@ const Otpremnice = () => {
 
     const handleSort = () => {
         setOrder(prevOrder => (prevOrder === 'asc' ? 'desc' : 'asc'));
+    }
+
+    const handleSameDate = (date) => {
+        // This function checks if the date already exists in the storage
+        const duplicateDate = artikli.some(item => formatDateForDisplay(item.date) === formatDateForDisplay(date));
+        if (duplicateDate) {
+            notification.error({
+                message: `Otpremnica s datumom ${formatDateForDisplay(date)} već postoji!`,
+                placement: 'topRight'
+            });
+            return true; // Indicate a duplicate date was found
+        }
+        return false; // No duplicate found
     }
 
     return (
