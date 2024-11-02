@@ -162,7 +162,7 @@ const Otpremnice = () => {
     
         // Collect total quantities for each article to be processed
         const totalArticles = {};
-    
+        console.log("arrObjArtikli" + arrObjArtikl);
         arrObjArtikl.forEach(({ nazivArtikla, kolicina }) => {
             if (!totalArticles[nazivArtikla]) {
                 totalArticles[nazivArtikla] = 0;
