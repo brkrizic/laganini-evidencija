@@ -13,6 +13,7 @@ import { useBaseUrl } from "../contexts/BaseUrlContext";
 import ArtikliSelect from "./common/ArtikliSearch";
 import PdfUpload from "./common/PdfUpload";
 import PdfDetails from "../modal/PdfDetails";
+import { decimalNonDecimal } from "../validation/regex";
 dayjs.extend(customParseFormat);
 
 const { Option } = Select;
@@ -110,6 +111,22 @@ const Inventura = () => {
     
 
     const handleSaveArtikl = () => {
+        if(nazivArtikla === ""){
+            notification.warning({
+                message: 'Neispravan artikl!',
+                description: `Naziv artikla ne može biti prazan.`,
+                placement: 'topRight'
+            });
+            return;
+        }
+        if(!decimalNonDecimal.test(iznosInventure) ||parseFloat(iznosInventure) <= 0){
+            notification.warning({
+                message: 'Neispravna količina',
+                description: 'Količina mora biti u ispravnom formatu',
+                placement: 'topRight'
+            });
+            return;
+        }
         const objArtikl = {
             nazivArtikla: nazivArtikla,
             kolicina: iznosInventure

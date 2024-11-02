@@ -11,6 +11,7 @@ import { OtpremniceService } from "../api/OtpremniceService";
 import { formatDateForDisplay, formatDateForServer } from "../convert/dateConverter";
 import { useBaseUrl } from "../contexts/BaseUrlContext";
 import ArtikliSelect from "./common/ArtikliSearch";
+import { decimalNonDecimal } from "../validation/regex";
 dayjs.extend(customParseFormat);
 
 const { Option } = Select;
@@ -120,6 +121,22 @@ const Otpremnice = () => {
     };
     
     const handleSaveArtikl = () => {
+        if(nazivArtikla === ""){
+            notification.warning({
+                message: 'Neispravan artikl!',
+                description: `Naziv artikla ne može biti prazan.`,
+                placement: 'topRight'
+            });
+            return;
+        }
+        if(!decimalNonDecimal.test(iznosOtpremnice) ||parseFloat(iznosOtpremnice) <= 0){
+            notification.warning({
+                message: 'Neispravna količina',
+                description: 'Količina mora biti u ispravnom formatu',
+                placement: 'topRight'
+            });
+            return;
+        }
         const objArtikl = {
             nazivArtikla: nazivArtikla,
             kolicina: iznosOtpremnice
