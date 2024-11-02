@@ -103,7 +103,8 @@ const OtpremnicaDetails = (props) => {
     };
 
     const handleOnOk = () => {
-        handleSaveUpdate();
+       // handleSaveUpdate();
+       handleOnClose();
     };
 
     const handleSwitchChange = (checked) => {
@@ -135,7 +136,7 @@ const OtpremnicaDetails = (props) => {
             onCancel={handleOnClose}
             cancelText="Odustani"
             onOk={handleOnOk}
-            okText="Spremi promjene"
+            okText="Uredu"
             title={props.title}
         >
             <Form>

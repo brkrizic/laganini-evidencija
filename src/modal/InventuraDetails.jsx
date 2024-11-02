@@ -96,7 +96,8 @@ const InventuraDetails = (props) => {
     };
 
     const handleOnOk = () => {
-        handleSaveUpdate();
+        //handleSaveUpdate();
+        handleOnClose();
     };
 
     const handleSwitchChange = (checked) => {

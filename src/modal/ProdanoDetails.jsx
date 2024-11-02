@@ -89,7 +89,8 @@ const Prodano = (props) => {
     };
 
     const handleOnOk = () => {
-        handleSaveUpdate();
+        //handleSaveUpdate();
+        handleOnClose();
     };
 
     const handleSwitchChange = (checked) => {
