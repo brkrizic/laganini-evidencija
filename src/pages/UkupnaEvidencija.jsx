@@ -47,6 +47,44 @@ const UkupnaEvidencija = () => {
 
     }, []);
 
+    // useEffect(() => {
+    //     const updateEvidencijaRobe = async () => {
+    //         try {
+    //             await evidencijaRobeOnAllItemsPutZero(baseUrl);
+    //         } catch (error) {
+    //             console.error('Error updating evidencija robe:', error);
+    //         }
+    //     };
+
+    //     updateEvidencijaRobe();
+    // }, [baseUrl]); // Add baseUrl as a dependency if it can change
+
+    const evidencijaRobeOnAllItemsPutZero = async (baseUrl) => {
+        try {
+            const res = await ArtikliService.getAllArtikli(baseUrl);
+            console.log(res.data);
+            // Use for...of to allow await inside the loop
+            for (const item of res.data) {
+                console.log("item: " + item.id)
+                const artikl = {
+                    ...item,
+                    evidencijaRobe: 0.0 // Set evidencijaRobe to 0.0 for each item
+                };
+                console.log("artikl: " + artikl.id)
+                console.log("artiklObj: " + JSON.stringify(artikl));
+                console.log("baseUrl: " + baseUrl);
+                
+                try {
+                    await ArtikliService.editArtikl(baseUrl, artikl.id, artikl);
+                } catch (error) {
+                    console.error(`Error updating artikl with id ${artikl.id}:`, error);
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching or updating artikli:', error);
+        }
+    };
+
     const handleIzracunaj = (data) => {
         return data.map(artikl => {
             const evidencijaStanja = parseFloat(artikl.kupljenaKolicina || 0) - parseFloat(artikl.prodajnaKolicina || 0);
@@ -54,8 +92,8 @@ const UkupnaEvidencija = () => {
 
             return {
                 ...artikl,
-                evidencijaStanja: evidencijaStanja,
-                razlika: razlika
+                evidencijaStanja: evidencijaStanja.toFixed(2),
+                razlika: razlika.toFixed(2)
             };
         });
     };
